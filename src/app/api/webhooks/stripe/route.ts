@@ -61,7 +61,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     await prisma.pedido.update({
       where: { id: pedidoId },
       data: {
-        stripePaymentId: session.payment_intent as string,
+        stripeSessionId: session.payment_intent as string,
       }
     });
     
@@ -120,7 +120,7 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
 
 async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
   const pedido = await prisma.pedido.findFirst({
-    where: { stripePaymentId: paymentIntent.id }
+    where: { stripeSessionId: paymentIntent.id }
   });
   
   if (pedido) {
