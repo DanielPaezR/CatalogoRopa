@@ -61,7 +61,6 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     await prisma.pedido.update({
       where: { id: pedidoId },
       data: {
-        estadoPago: 'PAGADO',
         stripePaymentId: session.payment_intent as string,
       }
     });
@@ -109,7 +108,7 @@ async function handleCheckoutSessionExpired(session: Stripe.Checkout.Session) {
   if (pedidoId) {
     await prisma.pedido.update({
       where: { id: pedidoId },
-      data: { estadoPago: 'FALLIDO' }
+      data: { }
     });
   }
 }
@@ -127,7 +126,7 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
   if (pedido) {
     await prisma.pedido.update({
       where: { id: pedido.id },
-      data: { estadoPago: 'FALLIDO' }
+      data: { }
     });
   }
 }

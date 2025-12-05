@@ -115,13 +115,12 @@ export async function POST(request: NextRequest) {
         clienteEmail: customer.email,
         clienteNombre: customer.name,
         clienteTelefono: customer.phone,
-        direccionEnvio: shippingAddress,
+        clienteDireccion: shippingAddress,
         subtotal: subtotal,
         envio: envio,
         total: total,
         metodoPago: 'TARJETA',
-        estadoPedido: 'PENDIENTE',
-        estadoPago: 'PENDIENTE',
+        estado: 'PENDIENTE',
         items: {
           create: productosActualizados.map(item => ({
             productoId: item.productoId,
