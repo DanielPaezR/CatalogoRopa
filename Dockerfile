@@ -7,9 +7,6 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 COPY prisma ./prisma/
 
-# Crear .env temporal para build
-RUN echo "DATABASE_URL=postgresql://fake:fake@fake:5432/fake" > .env
-
 # Instalar dependencias
 RUN npm ci
 
@@ -23,14 +20,15 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Variables de entorno para build
-ENV NEXT_TELEMETRY_DISABLED 1
-ENV NODE_ENV production
-ENV DATABASE_URL=postgresql://fake:fake@fake:5432/fake
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
+
+# NO pongas DATABASE_URL falsa aquí
 
 # Generar cliente Prisma
 RUN npx prisma generate
 
-# Construir la aplicación - SKIP PRERENDERING
+# Construir la aplicación
 RUN npm run build
 
 # Etapa 3: Runner
@@ -55,8 +53,8 @@ USER nextjs
 # Exponer puerto
 EXPOSE 3000
 
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
-ENV NODE_ENV production
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+ENV NODE_ENV=production
 
 CMD ["node", "server.js"]
