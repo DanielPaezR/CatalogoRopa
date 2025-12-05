@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/db'
+import { authOptions } from '../../../../../lib/auth'
+import { prisma } from '../../../../../lib/db'
 import { z } from 'zod'
+
+const categoriaSchema = z.object({
+  nombre: z.string().min(1, 'El nombre es requerido'),
+  slug: z.string().min(1, 'El slug es requerido').regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug inválido'),
+  descripcion: z.string().optional(),
+  imagen: z.string().optional(),
+  orden: z.number().int().min(0).default(0),
+  activo: z.boolean().default(true),
+})
 
 const updateCategoriaSchema = categoriaSchema.partial()
 
