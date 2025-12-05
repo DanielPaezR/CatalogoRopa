@@ -3,12 +3,12 @@ FROM node:18-alpine AS deps
 RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
-# ✅ CAMBIO: Copiar TODO el proyecto primero
+# Copiar archivos de dependencias
 COPY package.json package-lock.json* ./
 COPY prisma ./prisma/
 
-# ✅ CAMBIO: Usar --omit=dev en lugar de --only=production
-RUN npm ci --omit=dev
+# Instalar dependencias (producción + desarrollo para build)
+RUN npm ci
 
 # Etapa 2: Builder
 FROM node:18-alpine AS builder
@@ -16,11 +16,9 @@ WORKDIR /app
 
 # Copiar desde deps
 COPY --from=deps /app/node_modules ./node_modules
-
-# ✅ CAMBIO: Copiar TODO el proyecto
 COPY . .
 
-# Configurar variables de construcción
+# Variables de entorno
 ENV NEXT_TELEMETRY_DISABLED 1
 ENV NODE_ENV production
 
@@ -34,16 +32,15 @@ RUN npm run build
 FROM node:18-alpine AS runner
 WORKDIR /app
 
-# Crear usuario no-root para seguridad
+# Crear usuario no-root
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copiar necesarios de builder
+# Copiar archivos necesarios
 COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/prisma ./prisma
 
 # Cambiar a usuario no-root
 USER nextjs
@@ -57,4 +54,4 @@ ENV HOSTNAME "0.0.0.0"
 ENV NODE_ENV production
 
 # Comando de inicio
-CMD ["npm", "start"]
+CMD ["node", "server.js"]
