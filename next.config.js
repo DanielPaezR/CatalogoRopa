@@ -29,6 +29,9 @@ const nextConfig = {
       allowedOrigins: ['localhost:3000', '*.railway.app'],
     },
   },
+  // ✅ AGREGAR para Docker
+  output: 'standalone',
+  
   typescript: {
     ignoreBuildErrors: false,
   },
