@@ -1,17 +1,51 @@
-# railway.toml
-[build]
-builder = "nixpacks"
-buildCommand = "npm run build"
+# Etapa 1: Dependencias
+FROM node:18-alpine AS deps
+RUN apk add --no-cache libc6-compat openssl
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm ci --only=production
 
-[deploy]
-startCommand = "npm start"
-healthcheckPath = "/api/health"
-healthcheckTimeout = 60
-port = 3000
+# Etapa 2: Builder
+FROM node:18-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
 
-[build.environment]
-NODE_ENV = "production"
-NEXT_TELEMETRY_DISABLED = "1"
+# Configurar variables de construcción
+ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV production
 
-[deploy.environment]
-NODE_ENV = "production"
+# Generar cliente Prisma
+RUN npx prisma generate
+
+# Construir la aplicación
+RUN npm run build
+
+# Etapa 3: Runner
+FROM node:18-alpine AS runner
+WORKDIR /app
+
+# Crear usuario no-root para seguridad
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copiar necesarios de builder
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/prisma ./prisma
+
+# Cambiar a usuario no-root
+USER nextjs
+
+# Exponer puerto
+EXPOSE 3000
+
+# Variables de entorno
+ENV PORT 3000
+ENV HOSTNAME "0.0.0.0"
+ENV NODE_ENV production
+
+# Comando de inicio
+CMD ["npm", "start"]
