@@ -173,12 +173,20 @@ export async function POST(request: NextRequest) {
         slug: `${slug}-${Date.now().toString(36)}`,
         imagenes: validatedData.imagenes.length > 0 
           ? validatedData.imagenes 
-          : ['https://images.unsplash.com/photo-1523381210434-271e8be1f52b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'],
+          : ['/placeholder-product.jpg'],
+        // Corregir variantes:
+        variantes: validatedData.variantes && validatedData.variantes.length > 0 
+          ? {
+              create: validatedData.variantes.map(v => ({
+                talla: v.talla,
+                color: v.color,
+                stock: v.stock,
+                precio: v.precio || validatedData.precio,
+                sku: v.sku || `${validatedData.sku}-${v.talla}-${v.color}`
+              }))
+            }
+          : undefined,
       },
-      include: {
-        categoria: true,
-        variantes: true,
-      }
     })
 
     // Crear variantes si existen
