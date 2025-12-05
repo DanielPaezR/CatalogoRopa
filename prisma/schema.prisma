@@ -13,7 +13,10 @@ model Usuario {
   nombre    String
   password  String
   rol       String   @default("CLIENTE")
+  telefono  String?
+  direccion String?
   createdAt DateTime @default(now())
+  pedidos   Pedido[]
 }
 
 model Producto {
@@ -21,11 +24,94 @@ model Producto {
   nombre           String
   slug             String   @unique
   descripcionCorta String
-  descripcionLarga String
+  descripcionLarga String?
   precio           Float
+  precioOriginal   Float?
+  categoriaId      String?
+  sku              String   @unique
   stock            Int      @default(0)
+  stockMinimo      Int      @default(10)
   imagenes         String[]
+  colores          String[]
+  tallas           String[]
+  tags             String[]
   destacado        Boolean  @default(false)
   activo           Boolean  @default(true)
   createdAt        DateTime @default(now())
+  
+  // Relaciones
+  categoria   Categoria?    @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
+  variantes   Variante[]
+  pedidoItems PedidoItem[]
+}
+
+model Categoria {
+  id          String    @id @default(cuid())
+  nombre      String
+  slug        String    @unique
+  descripcion String?
+  imagen      String?
+  orden       Int       @default(0)
+  activo      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relaciones
+  productos Producto[]
+}
+
+model Variante {
+  id         String   @id @default(cuid())
+  productoId String
+  talla      String
+  color      String
+  stock      Int      @default(0)
+  precio     Float
+  sku        String
+  
+  // Relaciones
+  producto   Producto @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  pedidoItems PedidoItem[]
+  
+  @@unique([productoId, talla, color])
+}
+
+model Pedido {
+  id               String      @id @default(cuid())
+  numeroPedido     String      @unique
+  usuarioId        String?
+  clienteEmail     String
+  clienteNombre    String
+  clienteTelefono  String?
+  clienteDireccion String?
+  subtotal         Float
+  envio            Float       @default(0)
+  total            Float
+  estado           String      @default("PENDIENTE") // PENDIENTE, PROCESANDO, ENVIADO, ENTREGADO, CANCELADO
+  metodoPago       String      @default("STRIPE")    // STRIPE, MERCADOPAGO
+  stripeSessionId  String?
+  notas            String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  
+  // Relaciones
+  usuario Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  items   PedidoItem[]
+}
+
+model PedidoItem {
+  id         String   @id @default(cuid())
+  pedidoId   String
+  productoId String
+  varianteId String?
+  nombre     String
+  precio     Float
+  cantidad   Int      @default(1)
+  talla      String?
+  color      String?
+  
+  // Relaciones
+  pedido   Pedido   @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  producto Producto @relation(fields: [productoId], references: [id])
+  variante Variante? @relation(fields: [varianteId], references: [id])
 }
