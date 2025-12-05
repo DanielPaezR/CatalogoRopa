@@ -1,7 +1,9 @@
-import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import { getServerSession, NextAuthOptions } from "next-auth"
 import bcrypt from 'bcryptjs';
 import { prisma } from './db';
+
+
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -67,3 +69,12 @@ export const authOptions: NextAuthOptions = {
     signIn: '/admin/login',
   },
 };
+
+export async function getSession() {
+  return await getServerSession(authOptions)
+}
+
+export async function getCurrentUser() {
+  const session = await getSession()
+  return session?.user
+}

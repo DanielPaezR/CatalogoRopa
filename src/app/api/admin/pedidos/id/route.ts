@@ -1,31 +1,16 @@
+// src/app/api/admin/pedidos/[id]/route.ts - VERSIÓN CORREGIDA
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '../../../../../lib/auth'
+import { getCurrentUser } from '../../../../../lib/auth'
 import { prisma } from '../../../../../lib/db'
-import { z } from 'zod'
-
-const updateOrderSchema = z.object({
-  estadoPedido: z.enum(['PENDIENTE', 'PROCESANDO', 'ENVIADO', 'ENTREGADO', 'CANCELADO']).optional(),
-  estadoPago: z.enum(['PENDIENTE', 'PAGADO', 'FALLIDO', 'REEMBOLSADO']).optional(),
-  trackingNumber: z.string().optional(),
-  notas: z.string().optional(),
-  fechaEnvio: z.string().optional(),
-}).partial()
-
-interface Params {
-  params: {
-    id: string
-  }
-}
 
 export async function GET(
   request: NextRequest,
-  { params }: Params
+  { params }: { params: { id: string } }
 ) {
   try {
-    // Verificar autenticación
-    const session = await getServerSession(authOptions)
-    if (!session || session.user.role !== 'ADMIN') {
+    const user = await getCurrentUser()
+    
+    if (!user || user.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
@@ -37,30 +22,21 @@ export async function GET(
       include: {
         items: {
           include: {
-            producto: {
-              select: {
-                id: true,
-                nombre: true,
-                sku: true,
-                imagenes: true,
-                precio: true,
-              }
-            }
-          }
+            producto: true,
+            variante: true,
+          },
         },
         usuario: {
           select: {
             id: true,
-            nombre: true,
             email: true,
+            nombre: true,
             telefono: true,
             direccion: true,
-            ciudad: true,
-            pais: true,
-            codigoPostal: true,
-          }
-        }
-      }
+            // Quitados: ciudad, pais, codigoPostal (no existen en schema)
+          },
+        },
+      },
     })
 
     if (!pedido) {
@@ -71,11 +47,10 @@ export async function GET(
     }
 
     return NextResponse.json(pedido)
-
   } catch (error) {
-    console.error('Error fetching order:', error)
+    console.error('Error al obtener pedido:', error)
     return NextResponse.json(
-      { error: 'Error al obtener pedido' },
+      { error: 'Error interno del servidor' },
       { status: 500 }
     )
   }
@@ -83,12 +58,12 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: Params
+  { params }: { params: { id: string } }
 ) {
   try {
-    // Verificar autenticación
-    const session = await getServerSession(authOptions)
-    if (!session || session.user.role !== 'ADMIN') {
+    const user = await getCurrentUser()
+    
+    if (!user || user.role !== 'ADMIN') {
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
@@ -96,78 +71,33 @@ export async function PUT(
     }
 
     const body = await request.json()
-    
-    // Validar datos
-    const validatedData = updateOrderSchema.parse(body)
+    const { estado } = body
 
-    // Verificar si el pedido existe
-    const existingOrder = await prisma.pedido.findUnique({
-      where: { id: params.id }
-    })
-
-    if (!existingOrder) {
+    if (!estado || !['PENDIENTE', 'PROCESANDO', 'ENVIADO', 'ENTREGADO', 'CANCELADO'].includes(estado)) {
       return NextResponse.json(
-        { error: 'Pedido no encontrado' },
-        { status: 404 }
-      )
-    }
-
-    // Preparar datos para actualizar
-    const updateData: any = { ...validatedData }
-
-    if (validatedData.fechaEnvio) {
-      updateData.fechaEnvio = new Date(validatedData.fechaEnvio)
-    }
-
-    // Actualizar pedido
-    const pedido = await prisma.pedido.update({
-      where: { id: params.id },
-      data: updateData,
-      include: {
-        items: {
-          include: {
-            producto: true
-          }
-        }
-      }
-    })
-
-    // Si el pedido fue marcado como ENVIADO, enviar notificación por email
-    if (validatedData.estadoPedido === 'ENVIADO' && pedido.clienteEmail) {
-      await sendShippingNotification(pedido)
-    }
-
-    // Si el pedido fue marcado como ENTREGADO, actualizar métricas
-    if (validatedData.estadoPedido === 'ENTREGADO') {
-      await updateMetrics(pedido)
-    }
-
-    return NextResponse.json(pedido)
-
-  } catch (error) {
-    console.error('Error updating order:', error)
-    
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Datos inválidos', details: error.errors },
+        { error: 'Estado inválido' },
         { status: 400 }
       )
     }
 
+    const pedido = await prisma.pedido.update({
+      where: { id: params.id },
+      data: { estado },
+      include: {
+        items: {
+          include: {
+            producto: true,
+          },
+        },
+      },
+    })
+
+    return NextResponse.json(pedido)
+  } catch (error) {
+    console.error('Error al actualizar pedido:', error)
     return NextResponse.json(
-      { error: 'Error al actualizar pedido' },
+      { error: 'Error interno del servidor' },
       { status: 500 }
     )
   }
-}
-
-async function sendShippingNotification(pedido: any) {
-  // Aquí implementarías el envío de email
-  // Por ejemplo, usando nodemailer o un servicio como SendGrid
-  console.log(`Enviando notificación de envío para pedido ${pedido.numeroPedido} a ${pedido.clienteEmail}`)
-}
-
-async function updateMetrics(pedido: any) {
-  // Aquí actualizarías métricas o estadísticas
-  console.log(`Actualizando métricas para pedido entregado: ${pedido.numeroPedido}`)
 }
