@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
+import { prisma } from '../../../../lib/db';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       let varianteId = null;
       
       if (item.talla || item.color) {
-        const variante = producto.variantes.find(v => 
+        const variante = producto.variantes.find((v: any) => 
           v.talla === item.talla && v.color === item.color
         );
         
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
         imagen: item.imagen,
         stockActual: producto.stock,
         varianteStock: varianteId ? 
-          producto.variantes.find(v => v.id === varianteId)?.stock || 0 : 0
+          producto.variantes.find((v: any) => v.id === varianteId)?.stock || 0 : 0
       });
       
       // Crear item para Stripe

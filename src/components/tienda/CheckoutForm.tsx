@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js'
-import { CartItem } from '@/types'
+import { CartItem } from '../../types'
 import { toast } from 'react-hot-toast'
 
 interface CheckoutFormProps {

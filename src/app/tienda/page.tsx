@@ -1,7 +1,7 @@
-import { prisma } from '@/lib/db';
-import ProductoCard from '@/components/tienda/ProductoCard';
-import CategoriasNav from '@/components/tienda/CategoriasNav';
-import HeroSlider from '@/components/tienda/HeroSlider';
+import { prisma } from '../../lib/db';
+import ProductoCard from '../../components/tienda/ProductoCard';
+import CategoriasNav from '../../components/tienda/CategoriasNav';
+import HeroSlider from '../../components/tienda/HeroSlider';
 
 export const revalidate = 60; // Revalidar cada 60 segundos
 
@@ -55,7 +55,7 @@ export default async function HomePage() {
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {productosDestacados.map((producto) => (
+          {productosDestacados.map((producto: any) => (
             <ProductoCard key={producto.id} producto={producto} />
           ))}
         </div>

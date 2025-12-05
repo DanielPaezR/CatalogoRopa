@@ -2,7 +2,15 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Categoria } from '@prisma/client'
+interface Categoria {
+  id: string
+  nombre: string
+  slug: string
+  imagen?: string
+  descripcion?: string
+  orden: number
+  activo: boolean
+}
 
 interface CategoriasNavProps {
   categorias: Categoria[]

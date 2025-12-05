@@ -1,7 +1,7 @@
-import { prisma } from '@/lib/db'
+import { prisma } from '../../../../lib/db'
 import { notFound } from 'next/navigation'
-import ProductoCard from '@/components/tienda/ProductoCard'
-import ProductFilters from '@/components/tienda/ProductFilters'
+import ProductoCard from '../../../../components/tienda/ProductoCard'
+import ProductFilters from '../../../../components/tienda/ProductFilters'
 
 interface CategoriaPageProps {
   params: {
@@ -207,7 +207,7 @@ export default async function CategoriaPage({
 
               {/* Grid de productos */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {productos.map((producto) => (
+                {productos.map((producto: any) => (
                   <ProductoCard
                     key={producto.id}
                     producto={{

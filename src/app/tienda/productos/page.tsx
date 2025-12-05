@@ -1,8 +1,8 @@
-import { prisma } from '@/lib/db'
-import ProductFilters from '@/components/tienda/ProductFilters'
-import ProductoCard from '@/components/tienda/ProductoCard'
+import { prisma } from '../../../lib/db'
+import ProductFilters from '../../../components/tienda/ProductFilters'
+import ProductoCard from '../../../components/tienda/ProductoCard'
 import { Suspense } from 'react'
-import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import LoadingSpinner from '../../../components/ui/LoadingSpinner'
 
 export const revalidate = 60
 
@@ -175,7 +175,7 @@ export default async function ProductosPage({
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {productos.map((producto) => (
+                {productos.map((producto: any) => (
                   <ProductoCard
                     key={producto.id}
                     producto={{

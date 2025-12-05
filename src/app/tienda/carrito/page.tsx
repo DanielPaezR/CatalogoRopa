@@ -1,11 +1,11 @@
 'use client';
 
-import { useCart } from '@/context/CartContext';
+import { useCart } from '../../../context/CartContext';
 import Link from 'next/link';
 import { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
-import CheckoutForm from '@/components/tienda/CheckoutForm';
+import CheckoutForm from '../../../components/tienda/CheckoutForm';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 

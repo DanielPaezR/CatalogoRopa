@@ -1,9 +1,9 @@
-import { prisma } from '@/lib/db'
+import { prisma } from '../../../../lib/db'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
-import ProductModal from '@/components/tienda/ProductModal'
-import { ProductoWithRelations } from '@/types'
-import { formatPrice, calculateDiscount, getStockStatus } from '@/lib/utils'
+import ProductModal from '../../../../components/tienda/ProductModal'
+import { ProductoWithRelations } from '../../../../types'
+import { formatPrice, calculateDiscount, getStockStatus } from '../../../../lib/utils'
 
 interface ProductoPageProps {
   params: {
@@ -67,16 +67,25 @@ export default async function ProductoPage({ params }: ProductoPageProps) {
 
   // Calcular promedios de tallas si hay variantes
   const tallasDisponibles = Array.from(new Set(producto.variantes
-    .filter(v => v.stock > 0)
-    .map(v => v.talla)
+    .filter((v: any) => v.stock > 0)
+    .map((v: any) => v.talla)
     .concat(producto.tallas)
   )).filter(Boolean)
 
   const coloresDisponibles = Array.from(new Set(producto.variantes
-    .filter(v => v.stock > 0)
-    .map(v => v.color)
+    .filter((v: any) => v.stock > 0)
+    .map((v: any) => v.color)
     .concat(producto.colores)
   )).filter(Boolean)
+
+  function getStockColor(status: string): string {
+    switch(status) {
+      case 'agotado': return 'text-red-600'
+      case 'critico': return 'text-red-600'
+      case 'bajo': return 'text-yellow-600'
+      default: return 'text-green-600'
+    }
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -124,14 +133,14 @@ export default async function ProductoPage({ params }: ProductoPageProps) {
           
           {producto.imagenes.length > 1 && (
             <div className="grid grid-cols-4 gap-2">
-              {producto.imagenes.slice(1).map((imagen, index) => (
+              {producto.imagenes.slice(0, 3).map((img: string, idx: number) => (
                 <div
-                  key={index}
+                  key={idx}
                   className="relative aspect-square overflow-hidden rounded-lg bg-gray-100 cursor-pointer hover:opacity-80 transition-opacity"
                 >
                   <Image
-                    src={imagen}
-                    alt={`${producto.nombre} - Imagen ${index + 2}`}
+                    src={producto.imagenes[0] || ''}
+                    alt={`${producto.nombre} - Imagen ${idx + 2}`}
                     fill
                     className="object-cover"
                     sizes="25vw"
@@ -188,9 +197,7 @@ export default async function ProductoPage({ params }: ProductoPageProps) {
             </div>
             
             <div className="mt-2">
-              <span className={`font-medium ${stockStatus.color}`}>
-                {stockStatus.text}
-              </span>
+              <span className={`font-medium ${getStockColor(stockStatus)}`}>{stockStatus}</span>
               {producto.stock > 0 && (
                 <span className="text-gray-600 text-sm ml-2">
                   • SKU: {producto.sku}
@@ -202,7 +209,7 @@ export default async function ProductoPage({ params }: ProductoPageProps) {
           <div className="mb-8">
             <h3 className="text-lg font-semibold mb-3">Descripción</h3>
             <div className="prose max-w-none text-gray-700">
-              {producto.descripcionLarga.split('\n').map((paragraph, idx) => (
+              {producto.descripcionLarga.split('\n').map((paragraph: string , idx: number) => (
                 <p key={idx} className="mb-3">{paragraph}</p>
               ))}
             </div>
@@ -217,24 +224,24 @@ export default async function ProductoPage({ params }: ProductoPageProps) {
                   <div className="flex flex-wrap gap-2">
                     {tallasDisponibles.map((talla) => {
                       const varianteStock = producto.variantes
-                        .filter(v => v.talla === talla)
-                        .reduce((sum, v) => sum + v.stock, 0)
+                        .filter((v: any) => v.talla === talla)
+                        .reduce((sum: number, v: any) => sum + v.stock, 0)
                       
                       const stockTotal = varianteStock || producto.stock
                       const disponible = stockTotal > 0
                       
                       return (
                         <button
-                          key={talla}
+                          key={talla as string | number}  // <-- CORRECCIÓN
                           disabled={!disponible}
                           className={`px-4 py-2 border rounded-lg font-medium ${
                             disponible
-                              ? 'border-gray-300 hover:border-primary-500 hover:bg-primary-50'
+                              ? 'border-gray-300 hover:border-blue-500 hover:bg-blue-50'
                               : 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
                           }`}
                           title={disponible ? `${stockTotal} disponibles` : 'Agotado'}
                         >
-                          {talla}
+                          {talla as React.ReactNode}  {/* <-- CORRECCIÓN */}
                         </button>
                       )
                     })}
@@ -248,26 +255,26 @@ export default async function ProductoPage({ params }: ProductoPageProps) {
                   <div className="flex flex-wrap gap-3">
                     {coloresDisponibles.map((color) => {
                       const varianteStock = producto.variantes
-                        .filter(v => v.color === color)
-                        .reduce((sum, v) => sum + v.stock, 0)
+                        .filter((v: any) => v.color === color)
+                        .reduce((sum: number, v: any) => sum + v.stock, 0)
                       
                       const disponible = varianteStock > 0
                       
                       return (
                         <button
-                          key={color}
+                          key={color as string | number}  // <-- CORRECCIÓN
                           disabled={!disponible}
                           className={`flex items-center space-x-2 px-4 py-2 border rounded-lg ${
                             disponible
-                              ? 'border-gray-300 hover:border-primary-500'
+                              ? 'border-gray-300 hover:border-blue-500'
                               : 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
                           }`}
                         >
                           <span
                             className="w-6 h-6 rounded-full border"
-                            style={{ backgroundColor: getColorHex(color) }}
+                            style={{ backgroundColor: getColorHex(color as string) }}  // <-- CORRECCIÓN
                           />
-                          <span>{color}</span>
+                          <span>{color as React.ReactNode}</span>  {/* <-- CORRECCIÓN */}
                         </button>
                       )
                     })}
@@ -326,7 +333,7 @@ export default async function ProductoPage({ params }: ProductoPageProps) {
         <div>
           <h2 className="text-2xl font-bold mb-6">Productos relacionados</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {productosRelacionados.map((relacionado) => (
+            {productosRelacionados.map((relacionado: any) => (
               <div
                 key={relacionado.id}
                 className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
@@ -350,7 +357,7 @@ export default async function ProductoPage({ params }: ProductoPageProps) {
                         {formatPrice(parseFloat(relacionado.precio.toString()))}
                       </span>
                       <span className="text-sm text-gray-500">
-                        {getStockStatus(relacionado.stock).text}
+                        {getStockStatus(relacionado.stock)}
                       </span>
                     </div>
                   </div>

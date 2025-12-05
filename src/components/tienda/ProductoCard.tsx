@@ -1,10 +1,25 @@
 'use client';
 
-import { Producto } from '@prisma/client';
+interface Producto {
+  id: string;
+  nombre: string;
+  slug: string;
+  descripcionCorta: string;
+  precio: number;
+  precioOriginal?: number;
+  sku: string;
+  stock: number;
+  imagenes: string[];
+  colores: string[];
+  tallas: string[];
+  destacado: boolean;
+  activo: boolean;
+  categoriaId: string;
+}
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
-import { useCart } from '@/context/CartContext';
+import { useCart } from '../../context/CartContext';
 import { toast } from 'react-hot-toast';
 
 interface ProductoCardProps {
@@ -88,7 +103,7 @@ export default function ProductoCard({ producto }: ProductoCardProps) {
         {/* Mini imágenes */}
         {producto.imagenes.length > 1 && (
           <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-2">
-            {producto.imagenes.slice(0, 3).map((img, idx) => (
+            {producto.imagenes.slice(0, 3).map((img: string, idx: number) => (
               <button
                 key={idx}
                 onClick={() => setSelectedImage(idx)}

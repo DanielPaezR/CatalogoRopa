@@ -1,5 +1,4 @@
-import { Producto, Pedido, Usuario, Categoria, Variante } from '@prisma/client'
-
+// src/types/index.ts - VERSIÓN SIN DEPENDENCIA DE Prisma
 export type CartItem = {
   id: string
   nombre: string
@@ -26,6 +25,87 @@ export type CheckoutData = {
     postal_code: string
     country: string
   }
+}
+
+// Tipos manuales en lugar de usar Prisma
+export interface Producto {
+  id: string
+  nombre: string
+  slug: string
+  descripcionCorta: string
+  descripcionLarga?: string
+  precio: number
+  precioOriginal?: number
+  categoriaId: string
+  sku: string
+  stock: number
+  stockMinimo: number
+  imagenes: string[]
+  colores: string[]
+  tallas: string[]
+  tags: string[]
+  destacado: boolean
+  activo: boolean
+  createdAt: Date
+}
+
+export interface Pedido {
+  id: string
+  numeroPedido: string
+  usuarioId?: string
+  clienteEmail: string
+  clienteNombre: string
+  subtotal: number
+  envio: number
+  total: number
+  estado: 'PENDIENTE' | 'PROCESANDO' | 'ENVIADO' | 'ENTREGADO' | 'CANCELADO'
+  metodoPago: 'STRIPE' | 'MERCADOPAGO'
+  stripeSessionId?: string
+  createdAt: Date
+}
+
+export interface Usuario {
+  id: string
+  email: string
+  nombre: string
+  password: string
+  rol: 'ADMIN' | 'CLIENTE'
+  telefono?: string
+  direccion?: string
+  createdAt: Date
+}
+
+export interface Categoria {
+  id: string
+  nombre: string
+  slug: string
+  descripcion?: string
+  imagen?: string
+  orden: number
+  activo: boolean
+  createdAt: Date
+}
+
+export interface Variante {
+  id: string
+  productoId: string
+  talla: string
+  color: string
+  stock: number
+  precio: number
+  sku: string
+}
+
+export interface PedidoItem {
+  id: string
+  pedidoId: string
+  productoId: string
+  varianteId?: string
+  nombre: string
+  precio: number
+  cantidad: number
+  talla?: string
+  color?: string
 }
 
 export type ProductoWithRelations = Producto & {

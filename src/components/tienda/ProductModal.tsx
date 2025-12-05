@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { useCart } from '@/context/CartContext'
+import { useCart } from '../../context/CartContext'
 import { ProductoWithRelations } from '@/types'
 import { toast } from 'react-hot-toast'
-import { formatPrice } from '@/lib/utils'
+import { formatPrice } from '../../lib/utils'
 
 interface ProductModalProps {
   producto: ProductoWithRelations
@@ -20,19 +20,19 @@ export default function ProductModal({ producto }: ProductModalProps) {
 
   const precio = parseFloat(producto.precio.toString())
   const tallasDisponibles = Array.from(new Set(producto.variantes
-    .filter(v => v.stock > 0)
-    .map(v => v.talla)
+    .filter((v: any) => v.stock > 0)
+    .map((v: any) => v.talla)
     .concat(producto.tallas)
   )).filter(Boolean)
 
   const coloresDisponibles = Array.from(new Set(producto.variantes
-    .filter(v => v.stock > 0)
-    .map(v => v.color)
+    .filter((v: any) => v.stock > 0)
+    .map((v: any) => v.color)
     .concat(producto.colores)
   )).filter(Boolean)
 
   const varianteSeleccionada = producto.variantes.find(
-    v => v.talla === selectedTalla && v.color === selectedColor
+    (v: any) => v.talla === selectedTalla && v.color === selectedColor
   )
 
   const stockDisponible = varianteSeleccionada?.stock || producto.stock
