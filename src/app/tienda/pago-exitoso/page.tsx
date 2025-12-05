@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { useCart } from '@/context/CartContext'
+import { useCart } from '../../../context/CartContext'
 import Link from 'next/link'
-import { formatDate } from '@/lib/utils'
 
 export default function PagoExitosoPage() {
   const searchParams = useSearchParams()

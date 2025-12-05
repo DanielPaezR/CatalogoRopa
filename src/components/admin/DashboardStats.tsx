@@ -1,5 +1,5 @@
 // src/components/admin/DashboardStats.tsx
-import { formatPrice } from '@/lib/utils'
+import { formatPrice } from '../../lib/utils'
 
 interface DashboardStatsProps {
   stats?: {

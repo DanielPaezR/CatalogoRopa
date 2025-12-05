@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { formatPrice } from '@/lib/utils'
+import { formatPrice } from '../../lib/utils'
 
 interface ProductTableProps {
   products: Array<{

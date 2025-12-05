@@ -1,6 +1,6 @@
 // src/components/admin/RecentOrders.tsx
 import Link from 'next/link'
-import { formatPrice, formatDate } from '@/lib/utils'
+import { formatPrice, formatDate } from '../../lib/utils'
 
 interface Order {
   id: string
