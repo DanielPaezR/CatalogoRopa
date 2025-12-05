@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '../../../../lib/auth'
-import { prisma } from '../../../../lib/db'
-import { z } from 'zod'
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '../../../../lib/auth';
+import { prisma } from '../../../../lib/db';
+import { z } from 'zod';
+export const dynamic = 'force-dynamic';
 
 // Esquema de filtros
 const filtersSchema = z.object({

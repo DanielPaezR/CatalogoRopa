@@ -1,4 +1,4 @@
-# SOLUCIÓN MÁS FÁCIL - Cambia Node 18 por Node 20
+# Etapa 1: Dependencias
 FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat openssl openssl-dev
 WORKDIR /app
@@ -6,6 +6,9 @@ WORKDIR /app
 # Copiar archivos de dependencias
 COPY package.json package-lock.json* ./
 COPY prisma ./prisma/
+
+# Crear .env temporal para build
+RUN echo "DATABASE_URL=postgresql://fake:fake@fake:5432/fake" > .env
 
 # Instalar dependencias
 RUN npm ci
@@ -19,17 +22,15 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Variables de entorno
+# Variables de entorno para build
 ENV NEXT_TELEMETRY_DISABLED 1
 ENV NODE_ENV production
-
-# Configurar variable para Prisma (opcional)
-ENV PRISMA_QUERY_ENGINE_BINARY=/app/node_modules/.prisma/client/libquery_engine-linux-musl.so.node
+ENV DATABASE_URL=postgresql://fake:fake@fake:5432/fake
 
 # Generar cliente Prisma
 RUN npx prisma generate
 
-# Construir la aplicación
+# Construir la aplicación - SKIP PRERENDERING
 RUN npm run build
 
 # Etapa 3: Runner
@@ -46,8 +47,6 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder /app/package.json ./package.json
-
-# Copiar Prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 
 # Cambiar a usuario no-root

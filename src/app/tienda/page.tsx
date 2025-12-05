@@ -2,6 +2,7 @@ import { prisma } from '../../lib/db';
 import ProductoCard from '../../components/tienda/ProductoCard';
 import CategoriasNav from '../../components/tienda/CategoriasNav';
 import HeroSlider from '../../components/tienda/HeroSlider';
+export const dynamic = 'force-dynamic';
 
 export const revalidate = 60; // Revalidar cada 60 segundos
 

@@ -1,9 +1,10 @@
-import { prisma } from '../../../../lib/db'
-import { notFound } from 'next/navigation'
-import Image from 'next/image'
-import ProductModal from '../../../../components/tienda/ProductModal'
-import { ProductoWithRelations } from '../../../../types'
-import { formatPrice, calculateDiscount, getStockStatus } from '../../../../lib/utils'
+import { prisma } from '../../../../lib/db';
+import { notFound } from 'next/navigation';
+import Image from 'next/image';
+import ProductModal from '../../../../components/tienda/ProductModal';
+import { ProductoWithRelations } from '../../../../types';
+import { formatPrice, calculateDiscount, getStockStatus } from '../../../../lib/utils';
+export const dynamic = 'force-dynamic';
 
 interface ProductoPageProps {
   params: {

@@ -1,7 +1,8 @@
-import { prisma } from '../../../../lib/db'
-import { notFound } from 'next/navigation'
-import ProductoCard from '../../../../components/tienda/ProductoCard'
-import ProductFilters from '../../../../components/tienda/ProductFilters'
+import { prisma } from '../../../../lib/db';
+import { notFound } from 'next/navigation';
+import ProductoCard from '../../../../components/tienda/ProductoCard';
+import ProductFilters from '../../../../components/tienda/ProductFilters';
+export const dynamic = 'force-dynamic';
 
 interface CategoriaPageProps {
   params: {
