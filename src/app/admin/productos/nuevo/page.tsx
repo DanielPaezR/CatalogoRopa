@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-hot-toast'
-import Button from '@/components/ui/Button'
-import Input from '@/components/ui/Input'
+import Button from '../../../../components/ui/Button'
+import Input from '../../../../components/ui/Input'
 
 interface Categoria {
   id: string
@@ -145,6 +145,19 @@ export default function NuevoProductoPage() {
     }
   }
 
+  const getColorHex = (color: string): string => {
+    const colorMap: Record<string, string> = {
+      Negro: '#000000',
+      Blanco: '#FFFFFF',
+      Rojo: '#DC2626',
+      Azul: '#2563EB',
+      Verde: '#16A34A',
+      Gris: '#6B7280',
+      Beige: '#D6D3D1',
+    }
+    return colorMap[color] || '#CCCCCC'
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
@@ -203,7 +216,7 @@ export default function NuevoProductoPage() {
                   onChange={handleInputChange}
                   required
                   rows={2}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Descripción breve del producto"
                 />
               </div>
@@ -216,7 +229,7 @@ export default function NuevoProductoPage() {
                   value={formData.descripcionLarga}
                   onChange={handleInputChange}
                   rows={4}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Descripción completa del producto"
                 />
               </div>
@@ -240,7 +253,6 @@ export default function NuevoProductoPage() {
                   min="0"
                   step="0.01"
                   placeholder="0.00"
-                  icon={<span className="text-gray-500">$</span>}
                 />
               </div>
               <div>
@@ -255,7 +267,6 @@ export default function NuevoProductoPage() {
                   min="0"
                   step="0.01"
                   placeholder="0.00"
-                  icon={<span className="text-gray-500">$</span>}
                 />
               </div>
               <div>
@@ -294,7 +305,7 @@ export default function NuevoProductoPage() {
                   value={formData.categoriaId}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">Seleccionar categoría</option>
                   {categorias.map((categoria) => (
@@ -332,8 +343,8 @@ export default function NuevoProductoPage() {
                     onClick={() => handleTallaToggle(talla)}
                     className={`px-4 py-2 border rounded-lg font-medium ${
                       formData.tallas.includes(talla)
-                        ? 'bg-primary-600 text-white border-primary-600'
-                        : 'border-gray-300 hover:border-primary-500'
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'border-gray-300 hover:border-blue-500'
                     }`}
                   >
                     {talla}
@@ -352,8 +363,8 @@ export default function NuevoProductoPage() {
                     onClick={() => handleColorToggle(color)}
                     className={`flex items-center space-x-2 px-4 py-2 border rounded-lg ${
                       formData.colores.includes(color)
-                        ? 'border-primary-600 bg-primary-50'
-                        : 'border-gray-300 hover:border-primary-500'
+                        ? 'border-blue-600 bg-blue-50'
+                        : 'border-gray-300 hover:border-blue-500'
                     }`}
                   >
                     <span
@@ -481,7 +492,7 @@ export default function NuevoProductoPage() {
                   name="destacado"
                   checked={formData.destacado}
                   onChange={handleInputChange}
-                  className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                 />
                 <span className="text-sm font-medium text-gray-700">
                   Producto destacado
@@ -493,7 +504,7 @@ export default function NuevoProductoPage() {
                   name="activo"
                   checked={formData.activo}
                   onChange={handleInputChange}
-                  className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                 />
                 <span className="text-sm font-medium text-gray-700">
                   Producto activo (visible en la tienda)
@@ -523,17 +534,4 @@ export default function NuevoProductoPage() {
       </div>
     </div>
   )
-}
-
-function getColorHex(color: string): string {
-  const colorMap: Record<string, string> = {
-    Negro: '#000000',
-    Blanco: '#FFFFFF',
-    Rojo: '#DC2626',
-    Azul: '#2563EB',
-    Verde: '#16A34A',
-    Gris: '#6B7280',
-    Beige: '#D6D3D1',
-  }
-  return colorMap[color] || '#CCCCCC'
 }

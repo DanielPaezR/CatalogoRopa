@@ -1,5 +1,30 @@
 // src/components/admin/SalesChart.tsx
-export default function SalesChart() {
+
+interface SalesChartProps {
+  data?: Array<{
+    mes: string
+    ventas: number
+    pedidos: number
+  }>
+}
+
+export default function SalesChart({ data }: SalesChartProps) {
+  // Datos de ejemplo si no hay datos reales
+  const chartData = data && data.length > 0 ? data : [
+    { mes: 'Ene', ventas: 4000, pedidos: 24 },
+    { mes: 'Feb', ventas: 3000, pedidos: 18 },
+    { mes: 'Mar', ventas: 5000, pedidos: 30 },
+    { mes: 'Abr', ventas: 2780, pedidos: 22 },
+    { mes: 'May', ventas: 1890, pedidos: 15 },
+    { mes: 'Jun', ventas: 2390, pedidos: 19 },
+    { mes: 'Jul', ventas: 3490, pedidos: 25 },
+    { mes: 'Ago', ventas: 4300, pedidos: 32 },
+    { mes: 'Sep', ventas: 4100, pedidos: 29 },
+    { mes: 'Oct', ventas: 5200, pedidos: 35 },
+    { mes: 'Nov', ventas: 6100, pedidos: 42 },
+    { mes: 'Dic', ventas: 5800, pedidos: 38 },
+  ]
+
   return (
     <div className="w-full h-full p-6">
       <div className="flex items-center justify-between mb-4">

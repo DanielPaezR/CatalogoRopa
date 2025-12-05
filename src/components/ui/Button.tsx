@@ -1,5 +1,5 @@
 // src/components/ui/Button.tsx
-import { cn } from '@/lib/utils'
+import { cn } from '../../lib/utils'
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'danger'

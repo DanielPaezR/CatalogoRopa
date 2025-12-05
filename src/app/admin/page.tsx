@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import DashboardStats from '@/components/admin/DashboardStats';
-import RecentOrders from '@/components/admin/RecentOrders';
-import LowStockProducts from '@/components/admin/LowStockProducts';
-import SalesChart from '@/components/admin/SalesChart';
+import DashboardStats from '../../components/admin/DashboardStats';
+import RecentOrders from '../../components/admin/RecentOrders';
+import LowStockProducts from '../../components/admin/LowStockProducts';
+import SalesChart from '../../components/admin/SalesChart';
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
@@ -44,7 +44,7 @@ export default function AdminDashboard() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Cargando dashboard...</p>
         </div>
       </div>
@@ -66,7 +66,7 @@ export default function AdminDashboard() {
             <div className="bg-white rounded-xl shadow p-6">
               <h2 className="text-xl font-bold mb-6">Ventas Mensuales</h2>
               <div className="h-80">
-                <SalesChart data={stats.ventasMensuales} />
+                <SalesChart data={stats.ventasMensuales || []} />
               </div>
             </div>
           </div>

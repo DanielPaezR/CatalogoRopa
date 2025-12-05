@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { formatPrice } from '@/lib/utils'
-import Button from '@/components/ui/Button'
-import Input from '@/components/ui/Input'
+import { formatPrice } from '../../../lib/utils'
+import Button from '../../../components/ui/Button'
+import Input from '../../../components/ui/Input'
 import { toast } from 'react-hot-toast'
 
 interface Producto {
