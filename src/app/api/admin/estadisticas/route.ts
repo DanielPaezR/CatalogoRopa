@@ -34,8 +34,7 @@ export async function GET(request: NextRequest) {
       // 1. Ventas totales
       prisma.pedido.aggregate({
         where: {
-          estadoPedido: 'ENTREGADO',
-          estadoPago: 'PAGADO',
+          estado: 'ENTREGADO',
           createdAt: { gte: fechaInicio },
         },
         _sum: { total: true },
@@ -54,7 +53,7 @@ export async function GET(request: NextRequest) {
 
       // 5. Pedidos pendientes
       prisma.pedido.count({
-        where: { estadoPedido: 'PENDIENTE' },
+        where: { estado: 'PENDIENTE' },
       }),
 
       // 6. Total de productos
