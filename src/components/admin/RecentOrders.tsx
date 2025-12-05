@@ -1,8 +1,6 @@
-'use client'
-
-import { useState } from 'react'
+// src/components/admin/RecentOrders.tsx
 import Link from 'next/link'
-import { formatPrice } from '@/lib/utils'
+import { formatPrice, formatDate } from '@/lib/utils'
 
 interface Order {
   id: string
@@ -14,7 +12,7 @@ interface Order {
 }
 
 export default function RecentOrders() {
-  const [orders] = useState<Order[]>([
+  const orders: Order[] = [
     {
       id: '1',
       numeroPedido: 'PED-2024-001',
@@ -39,23 +37,7 @@ export default function RecentOrders() {
       estado: 'PROCESANDO',
       fecha: '2024-01-13',
     },
-    {
-      id: '4',
-      numeroPedido: 'PED-2024-004',
-      clienteNombre: 'Ana López',
-      total: 79990,
-      estado: 'PENDIENTE',
-      fecha: '2024-01-12',
-    },
-    {
-      id: '5',
-      numeroPedido: 'PED-2024-005',
-      clienteNombre: 'Pedro Martínez',
-      total: 189990,
-      estado: 'ENTREGADO',
-      fecha: '2024-01-11',
-    },
-  ])
+  ]
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -74,14 +56,6 @@ export default function RecentOrders() {
     }
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    })
-  }
-
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full divide-y divide-gray-200">
@@ -92,9 +66,6 @@ export default function RecentOrders() {
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Cliente
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Fecha
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Total
@@ -119,9 +90,6 @@ export default function RecentOrders() {
                 <div className="text-sm text-gray-900">{order.clienteNombre}</div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-500">{formatDate(order.fecha)}</div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
                 <div className="text-sm font-medium text-gray-900">
                   {formatPrice(order.total)}
                 </div>
@@ -134,28 +102,22 @@ export default function RecentOrders() {
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <Link
                   href={`/admin/pedidos/${order.id}`}
-                  className="text-primary-600 hover:text-primary-900 mr-4"
+                  className="text-blue-600 hover:text-blue-900"
                 >
                   Ver
                 </Link>
-                <button className="text-gray-600 hover:text-gray-900">
-                  Editar
-                </button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      <div className="flex justify-between items-center mt-4">
-        <div className="text-sm text-gray-500">
-          Mostrando {orders.length} pedidos recientes
-        </div>
+      <div className="mt-4 text-right">
         <Link
           href="/admin/pedidos"
-          className="text-primary-600 hover:text-primary-800 text-sm font-medium"
+          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
         >
-          Ver todos los pedidos →
+          Ver todos →
         </Link>
       </div>
     </div>

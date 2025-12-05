@@ -1,7 +1,6 @@
-'use client'
-
-import { useState } from 'react'
+// src/components/admin/LowStockProducts.tsx
 import Link from 'next/link'
+import { formatPrice } from '@/lib/utils'
 
 interface Product {
   id: string
@@ -13,7 +12,7 @@ interface Product {
 }
 
 export default function LowStockProducts() {
-  const [products] = useState<Product[]>([
+  const products: Product[] = [
     {
       id: '1',
       nombre: 'Camiseta Básica Negra - M',
@@ -38,15 +37,7 @@ export default function LowStockProducts() {
       stockMinimo: 5,
       precio: 129990,
     },
-    {
-      id: '4',
-      nombre: 'Vestido Floral - S',
-      sku: 'VS-001-S',
-      stock: 4,
-      stockMinimo: 8,
-      precio: 69990,
-    },
-  ])
+  ]
 
   const getStockColor = (stock: number, stockMinimo: number) => {
     const percentage = (stock / stockMinimo) * 100
@@ -55,31 +46,16 @@ export default function LowStockProducts() {
     return 'text-green-600'
   }
 
-  const getStockStatus = (stock: number, stockMinimo: number) => {
-    if (stock === 0) return 'Agotado'
-    if (stock < stockMinimo * 0.2) return 'Crítico'
-    if (stock < stockMinimo * 0.5) return 'Bajo'
-    return 'Aceptable'
-  }
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {products.map((product) => (
         <div
           key={product.id}
-          className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
+          className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
         >
           <div className="flex-1">
-            <div className="flex items-center space-x-3">
-              <div className={`w-3 h-3 rounded-full ${getStockColor(product.stock, product.stockMinimo)}`} />
-              <div>
-                <h4 className="font-medium text-gray-900">{product.nombre}</h4>
-                <div className="flex items-center space-x-4 text-sm text-gray-500">
-                  <span>SKU: {product.sku}</span>
-                  <span>Stock mínimo: {product.stockMinimo}</span>
-                </div>
-              </div>
-            </div>
+            <h4 className="font-medium text-gray-900">{product.nombre}</h4>
+            <div className="text-sm text-gray-500">SKU: {product.sku}</div>
           </div>
           
           <div className="text-right">
@@ -87,26 +63,20 @@ export default function LowStockProducts() {
               {product.stock} unidades
             </div>
             <div className="text-sm text-gray-500">
-              {getStockStatus(product.stock, product.stockMinimo)}
+              Mín: {product.stockMinimo}
             </div>
           </div>
         </div>
       ))}
 
-      {products.length === 0 ? (
-        <div className="text-center py-6 text-gray-500">
-          No hay productos con stock bajo
-        </div>
-      ) : (
-        <div className="pt-4 border-t">
-          <Link
-            href="/admin/productos?stock=bajo"
-            className="block w-full text-center py-2 text-primary-600 hover:text-primary-800 text-sm font-medium"
-          >
-            Ver todos los productos con stock bajo →
-          </Link>
-        </div>
-      )}
+      <div className="pt-3 border-t">
+        <Link
+          href="/admin/productos"
+          className="block text-center py-2 text-blue-600 hover:text-blue-800 text-sm font-medium"
+        >
+          Ver todos →
+        </Link>
+      </div>
     </div>
   )
 }
