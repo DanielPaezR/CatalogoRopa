@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useCart } from '../../context/CartContext'
-import { ProductoWithRelations } from '@/types'
+import { ProductoWithRelations } from '../../types'
 import { toast } from 'react-hot-toast'
 import { formatPrice } from '../../lib/utils'
 

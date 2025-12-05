@@ -1,6 +1,6 @@
 // src/components/admin/LowStockProducts.tsx
 import Link from 'next/link'
-import { formatPrice } from '@/lib/utils'
+import { formatPrice } from '../../lib/utils'
 
 interface Product {
   id: string
