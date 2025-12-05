@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import Header from '@/components/tienda/Header'
-import Footer from '@/components/tienda/Footer'
-import { CartProvider } from '@/context/CartContext'
-import { AuthProvider } from '@/context/AuthContext'
+import Header from '../components/tienda/Header'
+import Footer from '../components/tienda/Footer'
+import { CartProvider } from '../context/CartContext'
+import { AuthProvider } from '../context/AuthContext'
 import { Toaster } from 'react-hot-toast'
 
 const inter = Inter({ subsets: ['latin'] })
