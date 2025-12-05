@@ -2,13 +2,22 @@
 FROM node:18-alpine AS deps
 RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
+
+# ✅ CAMBIO: Copiar TODO el proyecto primero
 COPY package.json package-lock.json* ./
-RUN npm ci --only=production
+COPY prisma ./prisma/
+
+# ✅ CAMBIO: Usar --omit=dev en lugar de --only=production
+RUN npm ci --omit=dev
 
 # Etapa 2: Builder
 FROM node:18-alpine AS builder
 WORKDIR /app
+
+# Copiar desde deps
 COPY --from=deps /app/node_modules ./node_modules
+
+# ✅ CAMBIO: Copiar TODO el proyecto
 COPY . .
 
 # Configurar variables de construcción
