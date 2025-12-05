@@ -209,7 +209,7 @@ export default async function ProductoPage({ params }: ProductoPageProps) {
           <div className="mb-8">
             <h3 className="text-lg font-semibold mb-3">Descripción</h3>
             <div className="prose max-w-none text-gray-700">
-              {producto.descripcionLarga.split('\n').map((paragraph: string , idx: number) => (
+              {producto.descripcionLarga?.split('\n').map((paragraph: string , idx: number) => (
                 <p key={idx} className="mb-3">{paragraph}</p>
               ))}
             </div>

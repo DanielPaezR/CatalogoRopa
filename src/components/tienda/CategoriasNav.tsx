@@ -6,8 +6,8 @@ interface Categoria {
   id: string
   nombre: string
   slug: string
-  imagen?: string
-  descripcion?: string
+  descripcion?: any
+  imagen?: any
   orden: number
   activo: boolean
 }

@@ -49,8 +49,8 @@ model Categoria {
   id          String    @id @default(cuid())
   nombre      String
   slug        String    @unique
-  descripcion String?
-  imagen      String?
+  descripcion?: string | null
+  imagen?: string | null
   orden       Int       @default(0)
   activo      Boolean   @default(true)
   createdAt   DateTime  @default(now())

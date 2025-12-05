@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
       .trim()
 
     // Verificar si ya existe una categoría con ese nombre
-    const existingCategory = await prisma.categoria.findUnique({
+    const existingCategory = await prisma.categoria.findFirst({
       where: { nombre: validatedData.nombre }
     })
 
