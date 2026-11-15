@@ -1,286 +1,219 @@
 'use client'
 
-import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js'
-import { CartItem } from '../../types'
-import { toast } from 'react-hot-toast'
+import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
+import { itemKey, useCart } from '@/context/CartContext'
+import { calcularEnvio } from '@/lib/config-shared'
+import { METODO_LABEL } from '@/lib/constants'
+import { cn, formatPrice } from '@/lib/utils'
+import ProductImage from './ProductImage'
+import { useCartSync } from './useCartSync'
 
-interface CheckoutFormProps {
-  items: CartItem[]
-  total: number
-  onBack: () => void
-  onSuccess: () => void
+type Props = {
+  costoEnvio: number
+  envioGratisDesde: number | null
+  metodos: string[]
+  infoTransferencia: string | null
 }
 
-export default function CheckoutForm({
-  items,
-  total,
-  onBack,
-  onSuccess,
-}: CheckoutFormProps) {
-  const stripe = useStripe()
-  const elements = useElements()
+const DESCRIPCION_METODO: Record<string, string> = {
+  WHATSAPP: 'Te escribimos por WhatsApp para confirmar tu pedido y acordar el pago.',
+  CONTRAENTREGA: 'Pagas en efectivo cuando recibes tu pedido.',
+  TRANSFERENCIA: 'Te mostramos los datos para transferir al confirmar el pedido.',
+  STRIPE: 'Paga de forma segura con tarjeta de crédito o débito.',
+}
+
+const CIUDADES = ['Bogotá', 'Medellín', 'Cali', 'Barranquilla', 'Cartagena', 'Bucaramanga', 'Pereira', 'Manizales', 'Cúcuta', 'Ibagué', 'Santa Marta', 'Villavicencio', 'Pasto', 'Armenia', 'Neiva', 'Montería', 'Popayán', 'Tunja', 'Valledupar', 'Sincelejo']
+
+const STORAGE = 'catalogo-ropa:cliente'
+
+export default function CheckoutForm({ costoEnvio, envioGratisDesde, metodos, infoTransferencia }: Props) {
   const router = useRouter()
-  
-  const [loading, setLoading] = useState(false)
-  const [formData, setFormData] = useState({
-    nombre: '',
-    email: '',
-    telefono: '',
-    direccion: '',
-    ciudad: '',
-    pais: 'Colombia',
-    codigoPostal: '',
-  })
+  const { items, ready, subtotal, clear } = useCart()
+  useCartSync()
+  const [enviando, setEnviando] = useState(false)
+  const [metodo, setMetodo] = useState(metodos[0] ?? 'WHATSAPP')
+  const [form, setForm] = useState({ nombre: '', telefono: '', email: '', direccion: '', ciudad: '', notas: '' })
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!stripe || !elements) {
-      return
-    }
-
-    setLoading(true)
-
+  useEffect(() => {
     try {
-      // Validar formulario
-      if (!formData.nombre || !formData.email || !formData.direccion) {
-        throw new Error('Por favor completa todos los campos requeridos')
-      }
+      const saved = localStorage.getItem(STORAGE)
+      if (saved) setForm((f) => ({ ...f, ...JSON.parse(saved), notas: '' }))
+    } catch {
+      /* ignorar */
+    }
+  }, [])
 
-      // Crear sesión de pago
-      const response = await fetch('/api/pagos/crear-sesion', {
+  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+    setForm((f) => ({ ...f, [k]: e.target.value }))
+
+  const envio = calcularEnvio(subtotal, { costoEnvio, envioGratisDesde })
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (items.length === 0) return
+    setEnviando(true)
+    try {
+      const { notas, ...cliente } = form
+      try {
+        localStorage.setItem(STORAGE, JSON.stringify(cliente))
+      } catch {
+        /* ignorar */
+      }
+      const res = await fetch('/api/pedidos', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          items,
-          customer: {
-            email: formData.email,
-            name: formData.nombre,
-            phone: formData.telefono,
-          },
-          shippingAddress: {
-            line1: formData.direccion,
-            city: formData.ciudad,
-            state: formData.ciudad,
-            postal_code: formData.codigoPostal,
-            country: formData.pais,
-          },
+          cliente: { ...cliente, notas: notas || undefined },
+          metodoPago: metodo,
+          items: items.map((i) => ({ productoId: i.productoId, varianteId: i.varianteId, cantidad: i.cantidad })),
         }),
       })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Error al crear sesión de pago')
+      const data = await res.json()
+      if (!res.ok) {
+        toast.error(data.error ?? 'No se pudo crear el pedido')
+        setEnviando(false)
+        return
       }
-
-      // Redirigir a Stripe Checkout
-      window.location.href = data.url
-
-    } catch (error: any) {
-      console.error('Error:', error)
-      toast.error(error.message || 'Error al procesar el pago')
-    } finally {
-      setLoading(false)
+      clear()
+      if (data.url) {
+        window.location.href = data.url
+        return
+      }
+      router.push(`/pedido/${data.id}?nuevo=1`)
+    } catch {
+      toast.error('Error de conexión. Intenta de nuevo.')
+      setEnviando(false)
     }
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+  if (!ready) return <div className="container-page py-24 text-center text-stone-400">Cargando…</div>
+
+  if (items.length === 0 && !enviando) {
+    return (
+      <div className="container-page py-24 text-center">
+        <h1 className="text-4xl">No hay productos en tu carrito</h1>
+        <Link href="/productos" className="btn-primary mt-6">
+          Ir al catálogo
+        </Link>
+      </div>
+    )
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <button
-        onClick={onBack}
-        className="flex items-center text-gray-600 hover:text-gray-900 mb-6"
-      >
-        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-        Volver al carrito
-      </button>
-
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-bold mb-6">Finalizar Compra</h2>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Información del cliente */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Información del Cliente</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre completo *
-                </label>
-                <input
-                  type="text"
-                  name="nombre"
-                  value={formData.nombre}
-                  onChange={handleInputChange}
-                  required
-                  className="input"
-                  placeholder="Juan Pérez"
-                />
+    <div className="container-page pt-10">
+      <h1 className="mb-8 text-4xl sm:text-5xl">Finalizar compra</h1>
+      <form onSubmit={submit} className="grid gap-10 lg:grid-cols-[1fr_400px]">
+        <div className="space-y-10">
+          <section>
+            <h2 className="mb-5 text-2xl">Tus datos</h2>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label className="label" htmlFor="nombre">Nombre completo *</label>
+                <input id="nombre" required minLength={3} autoComplete="name" className="input" value={form.nombre} onChange={set('nombre')} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email *
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
-                  className="input"
-                  placeholder="juan@example.com"
-                />
+                <label className="label" htmlFor="telefono">Celular / WhatsApp *</label>
+                <input id="telefono" required type="tel" autoComplete="tel" inputMode="tel" placeholder="300 123 4567" className="input" value={form.telefono} onChange={set('telefono')} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Teléfono
-                </label>
-                <input
-                  type="tel"
-                  name="telefono"
-                  value={formData.telefono}
-                  onChange={handleInputChange}
-                  className="input"
-                  placeholder="+57 300 123 4567"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Código Postal
-                </label>
-                <input
-                  type="text"
-                  name="codigoPostal"
-                  value={formData.codigoPostal}
-                  onChange={handleInputChange}
-                  className="input"
-                  placeholder="110111"
-                />
+                <label className="label" htmlFor="email">Correo (opcional)</label>
+                <input id="email" type="email" autoComplete="email" className="input" value={form.email} onChange={set('email')} />
               </div>
             </div>
-          </div>
+          </section>
 
-          {/* Dirección de envío */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Dirección de Envío</h3>
-            <div className="space-y-4">
+          <section>
+            <h2 className="mb-5 text-2xl">Entrega</h2>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label className="label" htmlFor="direccion">Dirección *</label>
+                <input id="direccion" required minLength={5} autoComplete="street-address" placeholder="Calle 10 # 20-30, apto 401, barrio…" className="input" value={form.direccion} onChange={set('direccion')} />
+              </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Dirección *
-                </label>
-                <input
-                  type="text"
-                  name="direccion"
-                  value={formData.direccion}
-                  onChange={handleInputChange}
-                  required
-                  className="input"
-                  placeholder="Calle 123 # 45-67"
-                />
+                <label className="label" htmlFor="ciudad">Ciudad / municipio *</label>
+                <input id="ciudad" required list="ciudades" autoComplete="address-level2" className="input" value={form.ciudad} onChange={set('ciudad')} />
+                <datalist id="ciudades">
+                  {CIUDADES.map((c) => <option key={c} value={c} />)}
+                </datalist>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ciudad *
-                  </label>
-                  <input
-                    type="text"
-                    name="ciudad"
-                    value={formData.ciudad}
-                    onChange={handleInputChange}
-                    required
-                    className="input"
-                    placeholder="Bogotá"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    País
-                  </label>
-                  <input
-                    type="text"
-                    name="pais"
-                    value={formData.pais}
-                    onChange={handleInputChange}
-                    className="input"
-                  />
-                </div>
+              <div className="sm:col-span-2">
+                <label className="label" htmlFor="notas">Notas del pedido (opcional)</label>
+                <textarea id="notas" rows={3} maxLength={500} placeholder="Indicaciones para la entrega, horario, etc." className="input" value={form.notas} onChange={set('notas')} />
               </div>
             </div>
-          </div>
+          </section>
 
-          {/* Resumen del pedido */}
-          <div className="border-t pt-6">
-            <h3 className="text-lg font-semibold mb-4">Resumen del Pedido</h3>
-            <div className="space-y-3">
-              {items.map((item) => (
-                <div key={`${item.id}-${item.talla}-${item.color}`} className="flex justify-between">
-                  <div>
-                    <p className="font-medium">{item.nombre}</p>
-                    {(item.talla || item.color) && (
-                      <p className="text-sm text-gray-500">
-                        {item.talla && `Talla: ${item.talla}`}
-                        {item.talla && item.color && ' • '}
-                        {item.color && `Color: ${item.color}`}
-                      </p>
-                    )}
-                    <p className="text-sm text-gray-500">Cantidad: {item.cantidad}</p>
-                  </div>
-                  <p className="font-medium">
-                    ${(item.precio * item.cantidad).toLocaleString()}
-                  </p>
-                </div>
-              ))}
-              
-              <div className="border-t pt-3">
-                <div className="flex justify-between">
-                  <span>Subtotal</span>
-                  <span>${total.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Envío</span>
-                  <span className="text-green-600">Gratis</span>
-                </div>
-                <div className="flex justify-between text-lg font-bold mt-2">
-                  <span>Total</span>
-                  <span>${total.toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Botón de pago */}
-          <button
-            type="submit"
-            disabled={loading || !stripe}
-            className="w-full py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Procesando...
-              </span>
+          <section>
+            <h2 className="mb-5 text-2xl">Pago</h2>
+            {metodos.length === 0 ? (
+              <p className="text-sm text-red-600">No hay métodos de pago habilitados. Contáctanos para completar tu compra.</p>
             ) : (
-              'Pagar con Stripe'
+              <div className="space-y-3">
+                {metodos.map((m) => (
+                  <label
+                    key={m}
+                    className={cn(
+                      'flex cursor-pointer gap-4 rounded-2xl border bg-white p-4 transition',
+                      metodo === m ? 'border-ink ring-1 ring-ink' : 'border-sand-300 hover:border-ink/50'
+                    )}
+                  >
+                    <input type="radio" name="metodo" value={m} checked={metodo === m} onChange={() => setMetodo(m)} className="mt-1 accent-ink" />
+                    <div>
+                      <p className="font-medium">{METODO_LABEL[m]}</p>
+                      <p className="text-sm text-stone-500">{DESCRIPCION_METODO[m]}</p>
+                      {m === 'TRANSFERENCIA' && metodo === m && infoTransferencia && (
+                        <p className="mt-2 whitespace-pre-line rounded-xl bg-sand-100 p-3 text-sm text-ink-soft">{infoTransferencia}</p>
+                      )}
+                    </div>
+                  </label>
+                ))}
+              </div>
             )}
-          </button>
+          </section>
+        </div>
 
-          <p className="text-sm text-gray-500 text-center">
-            Tu información está protegida con encriptación de 256-bit
-          </p>
-        </form>
-      </div>
+        <aside className="card h-fit space-y-4 p-6 lg:sticky lg:top-28">
+          <h2 className="text-2xl">Tu pedido</h2>
+          <ul className="max-h-80 space-y-4 overflow-y-auto">
+            {items.map((item) => (
+              <li key={itemKey(item)} className="flex gap-3">
+                <div className="relative h-16 w-12 shrink-0 overflow-hidden rounded-lg bg-sand-100">
+                  <ProductImage src={item.imagen} alt={item.nombre} />
+                  <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-[10px] text-white">
+                    {item.cantidad}
+                  </span>
+                </div>
+                <div className="min-w-0 flex-1 text-sm">
+                  <p className="truncate font-medium">{item.nombre}</p>
+                  <p className="text-xs text-stone-500">{[item.talla && `Talla ${item.talla}`, item.color].filter(Boolean).join(' · ')}</p>
+                </div>
+                <p className="text-sm">{formatPrice(item.precio * item.cantidad)}</p>
+              </li>
+            ))}
+          </ul>
+          <div className="space-y-2 border-t border-sand-200 pt-4 text-sm">
+            <div className="flex justify-between">
+              <span className="text-stone-500">Subtotal</span>
+              <span>{formatPrice(subtotal)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-stone-500">Envío</span>
+              <span>{envio === 0 ? <span className="font-medium text-emerald-700">Gratis</span> : formatPrice(envio)}</span>
+            </div>
+          </div>
+          <div className="flex justify-between border-t border-sand-200 pt-4 text-lg font-semibold">
+            <span>Total</span>
+            <span>{formatPrice(subtotal + envio)}</span>
+          </div>
+          <button type="submit" disabled={enviando || metodos.length === 0} className="btn-primary w-full py-3.5">
+            {enviando ? 'Procesando…' : metodo === 'STRIPE' ? 'Ir a pagar' : 'Confirmar pedido'}
+          </button>
+          <p className="text-center text-xs text-stone-400">Al confirmar aceptas que te contactemos para coordinar la entrega.</p>
+        </aside>
+      </form>
     </div>
   )
 }

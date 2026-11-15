@@ -1,10 +1,11 @@
-import Stripe from 'stripe';
+import Stripe from 'stripe'
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2023-10-16',
-  typescript: true,
-});
+let client: Stripe | null = null
 
-export const getStripePublishableKey = () => {
-  return process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!;
-};
+export function getStripe() {
+  if (!process.env.STRIPE_SECRET_KEY) return null
+  if (!client) {
+    client = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' })
+  }
+  return client
+}

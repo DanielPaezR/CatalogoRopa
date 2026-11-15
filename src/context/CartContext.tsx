@@ -1,145 +1,174 @@
-'use client';
+'use client'
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 
-interface CartItem {
-  id: string;
-  nombre: string;
-  precio: number;
-  imagen: string;
-  cantidad: number;
-  stock: number;
-  talla?: string | null;
-  color?: string | null;
-  varianteId?: string;
+export type CartItem = {
+  productoId: string
+  varianteId: string | null
+  slug: string
+  nombre: string
+  precio: number
+  imagen: string | null
+  talla: string | null
+  color: string | null
+  cantidad: number
+  stock: number
 }
 
-interface CartContextType {
-  items: CartItem[];
-  addToCart: (item: CartItem) => Promise<void>;
-  removeFromCart: (id: string, talla?: string | null, color?: string | null) => void;
-  updateQuantity: (id: string, cantidad: number, talla?: string | null, color?: string | null) => void;
-  clearCart: () => void;
-  getTotal: () => number;
-  getItemCount: () => number;
+type CartContextType = {
+  items: CartItem[]
+  ready: boolean
+  count: number
+  subtotal: number
+  open: boolean
+  setOpen: (open: boolean) => void
+  add: (item: CartItem) => { ok: boolean; message?: string }
+  update: (key: string, cantidad: number) => void
+  remove: (key: string) => void
+  clear: () => void
+  sync: () => Promise<string[]>
 }
 
-const CartContext = createContext<CartContextType | undefined>(undefined);
+const STORAGE_KEY = 'catalogo-ropa:carrito'
+
+export const itemKey = (i: Pick<CartItem, 'productoId' | 'varianteId'>) => `${i.productoId}:${i.varianteId ?? ''}`
+
+const CartContext = createContext<CartContextType | null>(null)
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [items, setItems] = useState<CartItem[]>([])
+  const [ready, setReady] = useState(false)
+  const [open, setOpen] = useState(false)
 
   useEffect(() => {
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-      try {
-        setItems(JSON.parse(savedCart));
-      } catch (error) {
-        console.error('Error parsing cart from localStorage:', error);
-        localStorage.removeItem('cart');
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        if (Array.isArray(parsed)) setItems(parsed.filter((i) => i && i.productoId && i.cantidad > 0))
       }
+    } catch {
+      /* almacenamiento no disponible */
     }
-    setIsInitialized(true);
-  }, []);
+    setReady(true)
+  }, [])
 
   useEffect(() => {
-    if (isInitialized) {
-      localStorage.setItem('cart', JSON.stringify(items));
+    if (!ready) return
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
+    } catch {
+      /* ignorar */
     }
-  }, [items, isInitialized]);
+  }, [items, ready])
 
-  const addToCart = async (item: CartItem) => {
-    setItems(prevItems => {
-      const existingItemIndex = prevItems.findIndex(
-        i => i.id === item.id && i.talla === item.talla && i.color === item.color
-      );
-
-      if (existingItemIndex >= 0) {
-        const updatedItems = [...prevItems];
-        const existingItem = updatedItems[existingItemIndex];
-        
-        // Verificar stock
-        if (existingItem.cantidad + item.cantidad > existingItem.stock) {
-          throw new Error(`Solo quedan ${existingItem.stock} unidades disponibles`);
+  const add = useCallback(
+    (item: CartItem) => {
+      const key = itemKey(item)
+      const existing = items.find((i) => itemKey(i) === key)
+      const total = (existing?.cantidad ?? 0) + item.cantidad
+      if (total > item.stock) {
+        return {
+          ok: false,
+          message: item.stock > 0 ? `Solo hay ${item.stock} unidades disponibles` : 'Producto agotado',
         }
-        
-        updatedItems[existingItemIndex] = {
-          ...existingItem,
-          cantidad: existingItem.cantidad + item.cantidad,
-        };
-        return updatedItems;
-      } else {
-        // Verificar stock para nuevo item
-        if (item.cantidad > item.stock) {
-          throw new Error(`Solo quedan ${item.stock} unidades disponibles`);
-        }
-        
-        return [...prevItems, item];
       }
-    });
-  };
-
-  const removeFromCart = (id: string, talla?: string | null, color?: string | null) => {
-    setItems(prevItems =>
-      prevItems.filter(
-        item => !(item.id === id && item.talla === talla && item.color === color)
+      setItems((prev) =>
+        existing
+          ? prev.map((i) => (itemKey(i) === key ? { ...i, ...item, cantidad: total } : i))
+          : [...prev, item]
       )
-    );
-  };
+      return { ok: true }
+    },
+    [items]
+  )
 
-  const updateQuantity = (id: string, cantidad: number, talla?: string | null, color?: string | null) => {
-    if (cantidad <= 0) {
-      removeFromCart(id, talla, color);
-      return;
-    }
+  const update = useCallback((key: string, cantidad: number) => {
+    setItems((prev) =>
+      prev
+        .map((i) => (itemKey(i) === key ? { ...i, cantidad: Math.max(0, Math.min(cantidad, i.stock)) } : i))
+        .filter((i) => i.cantidad > 0)
+    )
+  }, [])
 
-    setItems(prevItems =>
-      prevItems.map(item => {
-        if (item.id === id && item.talla === talla && item.color === color) {
-          if (cantidad > item.stock) {
-            throw new Error(`Solo quedan ${item.stock} unidades disponibles`);
-          }
-          return { ...item, cantidad };
-        }
-        return item;
+  const remove = useCallback((key: string) => {
+    setItems((prev) => prev.filter((i) => itemKey(i) !== key))
+  }, [])
+
+  const clear = useCallback(() => setItems([]), [])
+
+  /** Actualiza precios y stock con el servidor. Devuelve avisos de cambios. */
+  const sync = useCallback(async () => {
+    if (items.length === 0) return []
+    try {
+      const res = await fetch('/api/carrito', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: items.map((i) => ({ productoId: i.productoId, varianteId: i.varianteId })) }),
       })
-    );
-  };
+      if (!res.ok) return []
+      const data: {
+        items: {
+          productoId: string
+          varianteId: string | null
+          disponible: boolean
+          precio?: number
+          stock?: number
+          nombre?: string
+          slug?: string
+          imagen?: string | null
+        }[]
+      } = await res.json()
+      const avisos: string[] = []
+      const next: CartItem[] = []
+      for (const item of items) {
+        const fresh = data.items.find((f) => f.productoId === item.productoId && (f.varianteId ?? null) === item.varianteId)
+        if (!fresh || !fresh.disponible || !fresh.stock) {
+          avisos.push(`"${item.nombre}" ya no está disponible y se quitó del carrito`)
+          continue
+        }
+        const cantidad = Math.min(item.cantidad, fresh.stock)
+        if (cantidad < item.cantidad) avisos.push(`Ajustamos la cantidad de "${item.nombre}" al stock disponible`)
+        if (fresh.precio !== item.precio) avisos.push(`El precio de "${item.nombre}" se actualizó`)
+        next.push({
+          ...item,
+          cantidad,
+          stock: fresh.stock,
+          precio: fresh.precio ?? item.precio,
+          nombre: fresh.nombre ?? item.nombre,
+          slug: fresh.slug ?? item.slug,
+          imagen: fresh.imagen ?? item.imagen,
+        })
+      }
+      setItems(next)
+      return avisos
+    } catch {
+      return []
+    }
+  }, [items])
 
-  const clearCart = () => {
-    setItems([]);
-  };
+  const value = useMemo(
+    () => ({
+      items,
+      ready,
+      open,
+      setOpen,
+      add,
+      update,
+      remove,
+      clear,
+      sync,
+      count: items.reduce((n, i) => n + i.cantidad, 0),
+      subtotal: items.reduce((n, i) => n + i.precio * i.cantidad, 0),
+    }),
+    [items, ready, open, add, update, remove, clear, sync]
+  )
 
-  const getTotal = () => {
-    return items.reduce((total, item) => total + item.precio * item.cantidad, 0);
-  };
-
-  const getItemCount = () => {
-    return items.reduce((count, item) => count + item.cantidad, 0);
-  };
-
-  return (
-    <CartContext.Provider
-      value={{
-        items,
-        addToCart,
-        removeFromCart,
-        updateQuantity,
-        clearCart,
-        getTotal,
-        getItemCount,
-      }}
-    >
-      {children}
-    </CartContext.Provider>
-  );
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>
 }
 
 export function useCart() {
-  const context = useContext(CartContext);
-  if (context === undefined) {
-    throw new Error('useCart must be used within a CartProvider');
-  }
-  return context;
+  const ctx = useContext(CartContext)
+  if (!ctx) throw new Error('useCart debe usarse dentro de CartProvider')
+  return ctx
 }

@@ -1,64 +1,38 @@
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import type { Metadata, Viewport } from 'next'
+import { Inter, Fraunces } from 'next/font/google'
+import Providers from './providers'
+import { getConfig } from '@/lib/config'
 import './globals.css'
-import Header from '../components/tienda/Header'
-import Footer from '../components/tienda/Footer'
-import { CartProvider } from '../context/CartContext'
-import { AuthProvider } from '../context/AuthContext'
-import { Toaster } from 'react-hot-toast'
 
-const inter = Inter({ subsets: ['latin'] })
+const sans = Inter({ subsets: ['latin'], variable: '--font-sans', display: 'swap' })
+const display = Fraunces({ subsets: ['latin'], variable: '--font-display', display: 'swap' })
 
-export const metadata: Metadata = {
-  title: 'ModaStyle - Tu tienda de ropa online',
-  description: 'Descubre las últimas tendencias en moda con nuestra colección exclusiva',
-  keywords: 'ropa, moda, tienda online, compras, fashion',
-  openGraph: {
-    title: 'ModaStyle',
-    description: 'Tu tienda de ropa online',
-    images: ['/og-image.jpg'],
-  },
+export const dynamic = 'force-dynamic'
+
+export async function generateMetadata(): Promise<Metadata> {
+  let nombre = 'ModaStyle'
+  let eslogan = 'Tienda de ropa online'
+  try {
+    const config = await getConfig()
+    nombre = config.nombreTienda
+    eslogan = config.eslogan
+  } catch {
+    /* sin base de datos */
+  }
+  return {
+    title: { default: `${nombre} · ${eslogan}`, template: `%s · ${nombre}` },
+    description: `${nombre}: ${eslogan}. Compra online con envío a toda Colombia.`,
+    icons: { icon: '/icon.svg' },
+  }
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export const viewport: Viewport = { themeColor: '#1c1917' }
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es">
-      <body className={`${inter.className} bg-gray-50 text-gray-900`}>
-        <AuthProvider>
-          <CartProvider>
-            <div className="min-h-screen flex flex-col">
-              <Header />
-              <main className="flex-grow">{children}</main>
-              <Footer />
-            </div>
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 3000,
-                style: {
-                  background: '#363636',
-                  color: '#fff',
-                },
-                success: {
-                  duration: 3000,
-                  style: {
-                    background: '#10b981',
-                  },
-                },
-                error: {
-                  duration: 4000,
-                  style: {
-                    background: '#ef4444',
-                  },
-                },
-              }}
-            />
-          </CartProvider>
-        </AuthProvider>
+    <html lang="es" className={`${sans.variable} ${display.variable}`}>
+      <body className="min-h-screen bg-sand-50 font-sans text-ink antialiased">
+        <Providers>{children}</Providers>
       </body>
     </html>
   )

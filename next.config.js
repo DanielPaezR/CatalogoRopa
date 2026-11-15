@@ -1,15 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  // Deshabilitar prerendering para páginas problemáticas
+  poweredByHeader: false,
   experimental: {
-    serverComponentsExternalPackages: ['@prisma/client', 'prisma'],
+    serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs'],
   },
 }
 

@@ -3,159 +3,61 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --primary: #0ea5e9;
-    --primary-dark: #0284c7;
-    --secondary: #64748b;
-    --success: #10b981;
-    --warning: #f59e0b;
-    --danger: #ef4444;
+  h1, h2, h3 {
+    @apply font-display tracking-tight;
   }
-
-  * {
-    @apply box-border;
-  }
-
-  body {
-    @apply bg-gray-50 text-gray-900 antialiased;
-  }
-
-  /* Scrollbar personalizada */
-  ::-webkit-scrollbar {
-    @apply w-2;
-  }
-
-  ::-webkit-scrollbar-track {
-    @apply bg-gray-100;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    @apply bg-gray-300 rounded-full;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-400;
+  ::selection {
+    @apply bg-accent text-white;
   }
 }
 
 @layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
   .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition
+      focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2
+      disabled:cursor-not-allowed disabled:opacity-50;
   }
-
   .btn-primary {
-    @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+    @apply btn bg-ink text-white hover:bg-ink-soft;
   }
-
-  .btn-secondary {
-    @apply bg-secondary-600 text-white hover:bg-secondary-700 focus:ring-secondary-500;
+  .btn-accent {
+    @apply btn bg-accent text-white hover:bg-accent-dark;
   }
-
   .btn-outline {
-    @apply border border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-500;
+    @apply btn border border-ink/20 bg-white text-ink hover:border-ink;
   }
-
+  .btn-ghost {
+    @apply btn text-ink hover:bg-sand-100;
+  }
+  .btn-whatsapp {
+    @apply btn bg-[#25D366] text-white hover:bg-[#1ebe5b];
+  }
   .btn-danger {
-    @apply bg-danger-600 text-white hover:bg-danger-700 focus:ring-danger-500;
+    @apply btn bg-red-600 text-white hover:bg-red-700;
   }
-
   .input {
-    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors;
+    @apply w-full rounded-xl border border-sand-300 bg-white px-3.5 py-2.5 text-sm text-ink placeholder:text-stone-400
+      transition focus:border-ink focus:outline-none focus:ring-2 focus:ring-ink/10;
   }
-
-  .input-error {
-    @apply border-danger-500 focus:ring-danger-500;
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-ink-soft;
   }
-
   .card {
-    @apply bg-white rounded-lg shadow-md overflow-hidden;
+    @apply rounded-2xl border border-sand-200 bg-white;
   }
-
-  .card-hover {
-    @apply transition-shadow duration-300 hover:shadow-lg;
-  }
-
-  .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
-  }
-
-  .badge-primary {
-    @apply bg-primary-100 text-primary-800;
-  }
-
-  .badge-success {
-    @apply bg-success-100 text-success-800;
-  }
-
-  .badge-warning {
-    @apply bg-warning-100 text-warning-800;
-  }
-
-  .badge-danger {
-    @apply bg-danger-100 text-danger-800;
-  }
-
-  .container {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
-  }
-
-  .section {
-    @apply py-8 md:py-12;
-  }
-
-  .section-title {
-    @apply text-3xl font-bold text-gray-900 mb-4;
-  }
-
-  .section-subtitle {
-    @apply text-lg text-gray-600 mb-8;
+  .chip {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
   }
 }
 
-/* Animaciones personalizadas */
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
+@layer utilities {
+  .scrollbar-none {
+    scrollbar-width: none;
   }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.animate-pulse-custom {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* Utilidades */
-.line-clamp-1 {
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 1;
-}
-
-.line-clamp-2 {
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
-.line-clamp-3 {
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-}
-
-/* Loader */
-.loader {
-  border-top-color: var(--primary);
-  animation: spinner 0.6s linear infinite;
-}
-
-@keyframes spinner {
-  to {
-    transform: rotate(360deg);
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
   }
 }
