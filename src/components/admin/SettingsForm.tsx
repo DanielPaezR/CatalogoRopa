@@ -194,13 +194,14 @@ export default function SettingsForm({ initial, wompi }: { initial: Settings; wo
               <span className="block text-xs text-stone-500">Tarjeta, PSE, Nequi y botón Bancolombia.</span>
             </span>
             <span className={`chip ${wompi.activo ? (wompi.pruebas ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800') : 'bg-sand-200 text-stone-500'}`}>
-              {wompi.activo ? (wompi.pruebas ? 'Modo pruebas' : 'Activo') : 'Inactivo'}
+              {wompi.activo ? (wompi.pruebas ? 'Modo pruebas' : 'Activo') : 'Pendiente'}
             </span>
           </div>
           {!wompi.activo ? (
             <p className="text-xs text-stone-500">
-              Para activarlo, configura en el servidor (Railway → Variables) <code>WOMPI_PUBLIC_KEY</code>, <code>WOMPI_INTEGRITY_SECRET</code> y{' '}
-              <code>WOMPI_EVENTS_SECRET</code>. Las encuentras en comercios.wompi.co → Desarrolladores.
+              Pendiente de activar. Mientras tanto la tienda vende con los demás métodos de pago y el pago en línea no se muestra a los
+              clientes. Para activarlo, agrega en Railway → Variables <code>WOMPI_PUBLIC_KEY</code>, <code>WOMPI_INTEGRITY_SECRET</code> y{' '}
+              <code>WOMPI_EVENTS_SECRET</code> (comercios.wompi.co → Desarrolladores) y vuelve a desplegar.
             </p>
           ) : (
             <>
