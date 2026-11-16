@@ -9,9 +9,9 @@ export default function ProductosPage({ searchParams }: { searchParams: Record<s
   const ofertas = searchParams.ofertas === '1'
   return (
     <CatalogView
-      title={ofertas ? 'Ofertas' : 'Catálogo'}
-      description={ofertas ? 'Prendas con precio especial por tiempo limitado.' : 'Explora todas nuestras prendas.'}
-      basePath="/productos"
+      title={ofertas ? 'Ofertas' : 'Novedades'}
+      eyebrow={ofertas ? 'Por tiempo limitado' : 'Colección'}
+      description={ofertas ? 'Prendas seleccionadas con precio especial.' : 'Todas nuestras prendas, de la más reciente a la de siempre.'}
       searchParams={searchParams}
     />
   )

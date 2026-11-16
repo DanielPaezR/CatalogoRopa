@@ -11,7 +11,10 @@ export const cardSelect = {
   imagenes: true,
   stock: true,
   colores: true,
+  tallas: true,
+  createdAt: true,
   categoria: { select: { nombre: true } },
+  variantes: { select: { id: true, talla: true, color: true, stock: true } },
 } satisfies Prisma.ProductoSelect
 
 export const getCategoriasMenu = cache(async () =>
@@ -35,6 +38,7 @@ export type Filtros = {
   q?: string
   categoria?: string
   talla?: string
+  color?: string
   orden?: string
   ofertas?: boolean
   disponibles?: boolean
@@ -56,6 +60,7 @@ export function parseFiltros(sp: Record<string, string | string[] | undefined>):
     q: get('q'),
     categoria: get('categoria'),
     talla: get('talla'),
+    color: get('color'),
     orden: get('orden'),
     ofertas: get('ofertas') === '1',
     disponibles: get('disponibles') === '1',
@@ -76,6 +81,7 @@ export async function buscarProductos(f: Filtros) {
   }
   if (f.categoria) where.categoria = { slug: f.categoria }
   if (f.talla) where.tallas = { has: f.talla }
+  if (f.color) where.colores = { has: f.color }
   if (f.ofertas) where.precioAnterior = { not: null }
   if (f.disponibles) where.stock = { gt: 0 }
   if (f.min || f.max) where.precio = { ...(f.min ? { gte: f.min } : {}), ...(f.max ? { lte: f.max } : {}) }
@@ -88,8 +94,7 @@ export async function buscarProductos(f: Filtros) {
       where,
       select: cardSelect,
       orderBy: [orden.orderBy, { id: 'asc' }],
-      skip: (page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
+      take: PAGE_SIZE * page,
     }),
     prisma.producto.count({ where }),
   ])
@@ -97,16 +102,24 @@ export async function buscarProductos(f: Filtros) {
   return { productos, total, page, pages: Math.max(1, Math.ceil(total / PAGE_SIZE)) }
 }
 
-/** Tallas disponibles en el catálogo activo, para el filtro. */
-export async function tallasDisponibles(categoriaSlug?: string) {
+/** Tallas y colores disponibles en el catálogo activo, para los filtros. */
+export async function opcionesFiltro(categoriaSlug?: string) {
   const rows = await prisma.producto.findMany({
     where: { activo: true, ...(categoriaSlug ? { categoria: { slug: categoriaSlug } } : {}) },
-    select: { tallas: true },
+    select: { tallas: true, colores: true },
   })
   const set = new Set<string>()
-  rows.forEach((r) => r.tallas.forEach((t) => set.add(t)))
+  const colores = new Set<string>()
+  rows.forEach((r) => {
+    r.tallas.forEach((t) => set.add(t))
+    r.colores.forEach((c) => colores.add(c))
+  })
+  return { tallas: ordenarTallas(Array.from(set)), colores: Array.from(colores).sort((a, b) => a.localeCompare(b, 'es')) }
+}
+
+export function ordenarTallas(tallas: string[]) {
   const orden = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL']
-  return Array.from(set).sort((a, b) => {
+  return [...tallas].sort((a, b) => {
     const ia = orden.indexOf(a.toUpperCase())
     const ib = orden.indexOf(b.toUpperCase())
     if (ia >= 0 && ib >= 0) return ia - ib
@@ -115,3 +128,19 @@ export async function tallasDisponibles(categoriaSlug?: string) {
     return a.localeCompare(b, 'es', { numeric: true })
   })
 }
+
+/** Categorías del menú con una imagen de portada (la propia o la del producto más reciente). */
+export const getCategoriasConPortada = cache(async () => {
+  const categorias = await getCategoriasMenu()
+  return Promise.all(
+    categorias.map(async (c) => {
+      if (c.imagen) return { ...c, portada: c.imagen }
+      const p = await prisma.producto.findFirst({
+        where: { activo: true, categoriaId: c.id, imagenes: { isEmpty: false } },
+        orderBy: { createdAt: 'desc' },
+        select: { imagenes: true },
+      })
+      return { ...c, portada: p?.imagenes[0] ?? null }
+    })
+  )
+})

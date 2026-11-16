@@ -222,3 +222,51 @@ export function TiktokIcon(p: P) {
     </Base>
   )
 }
+
+export const HeartIcon = (p: P) => (
+  <Base {...p}>
+    <path d="M12 20s-7.5-4.6-9.2-9.3C1.6 7.4 3.8 4 7.2 4c2 0 3.6 1.1 4.8 2.8C13.2 5.1 14.8 4 16.8 4c3.4 0 5.6 3.4 4.4 6.7C19.5 15.4 12 20 12 20z" />
+  </Base>
+)
+export const ArrowRightIcon = (p: P) => (
+  <Base {...p}>
+    <path d="M4 12h16M14 6l6 6-6 6" />
+  </Base>
+)
+export const ArrowLeftIcon = (p: P) => (
+  <Base {...p}>
+    <path d="M20 12H4M10 6l-6 6 6 6" />
+  </Base>
+)
+export const SlidersIcon = (p: P) => (
+  <Base {...p}>
+    <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
+    <circle cx="16" cy="7" r="2" />
+    <circle cx="10" cy="17" r="2" />
+  </Base>
+)
+export const RulerIcon = (p: P) => (
+  <Base {...p}>
+    <path d="M3 15 15 3l6 6L9 21l-6-6zM7 11l2 2M10 8l2 2M13 5l2 2" />
+  </Base>
+)
+export const Grid2Icon = (p: P) => (
+  <Base {...p}>
+    <rect x="4" y="4" width="7" height="16" />
+    <rect x="13" y="4" width="7" height="16" />
+  </Base>
+)
+export const Grid4Icon = (p: P) => (
+  <Base {...p}>
+    <rect x="3" y="4" width="3.5" height="16" />
+    <rect x="8.5" y="4" width="3.5" height="16" />
+    <rect x="14" y="4" width="3.5" height="16" />
+    <rect x="19.5" y="4" width="1.5" height="16" />
+  </Base>
+)
+export const UserIcon = (p: P) => (
+  <Base {...p}>
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
+  </Base>
+)

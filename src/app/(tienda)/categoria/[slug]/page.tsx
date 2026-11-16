@@ -23,7 +23,7 @@ export default async function CategoriaPage({ params, searchParams }: Props) {
     <CatalogView
       title={categoria.nombre}
       description={categoria.descripcion}
-      basePath={`/categoria/${categoria.slug}`}
+      eyebrow="Colección"
       searchParams={searchParams}
       categoriaSlug={categoria.slug}
     />

@@ -2,14 +2,16 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
+import Accordion from '@/components/tienda/Accordion'
 import AddToCart from '@/components/tienda/AddToCart'
-import ProductCard from '@/components/tienda/ProductCard'
+import ProductCarousel from '@/components/tienda/ProductCarousel'
 import ProductGallery from '@/components/tienda/ProductGallery'
-import { RefreshIcon, ShieldIcon, TruckIcon } from '@/components/ui/Icons'
+import RecentlyViewed from '@/components/tienda/RecentlyViewed'
 import { prisma } from '@/lib/db'
 import { getConfig } from '@/lib/config'
-import { cardSelect } from '@/lib/catalogo'
-import { baseUrlFromHeaders, discountPercent, formatPrice } from '@/lib/utils'
+import { cardSelect, ordenarTallas } from '@/lib/catalogo'
+import { METODO_LABEL } from '@/lib/constants'
+import { baseUrlFromHeaders, cn, discountPercent, formatPrice } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!p) return { title: 'Producto no encontrado' }
   return {
     title: p.nombre,
-    description: p.descripcion.slice(0, 160) || `${p.nombre} - ${formatPrice(p.precio)}`,
+    description: p.descripcion.slice(0, 160) || `${p.nombre} — ${formatPrice(p.precio)}`,
     openGraph: { images: p.imagenes.slice(0, 1) },
   }
 }
@@ -35,110 +37,132 @@ export default async function ProductoPage({ params }: Props) {
   const [producto, config] = await Promise.all([getProducto(params.slug), getConfig()])
   if (!producto || !producto.activo) notFound()
 
-  const relacionados = await prisma.producto.findMany({
-    where: {
-      activo: true,
-      id: { not: producto.id },
-      ...(producto.categoriaId ? { categoriaId: producto.categoriaId } : {}),
-    },
-    select: cardSelect,
-    orderBy: { createdAt: 'desc' },
-    take: 4,
-  })
+  const [mismaCategoria, otros] = await Promise.all([
+    prisma.producto.findMany({
+      where: { activo: true, id: { not: producto.id }, categoriaId: producto.categoriaId ?? undefined },
+      select: cardSelect,
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    }),
+    prisma.producto.findMany({
+      where: { activo: true, id: { not: producto.id }, destacado: true },
+      select: cardSelect,
+      orderBy: { updatedAt: 'desc' },
+      take: 10,
+    }),
+  ])
+  const relacionados = [...mismaCategoria, ...otros.filter((o) => !mismaCategoria.some((m) => m.id === o.id))].slice(0, 10)
 
   const descuento = discountPercent(producto.precio, producto.precioAnterior)
   const url = `${baseUrlFromHeaders(headers())}/productos/${producto.slug}`
+  const metodos = [
+    config.pagoContraentrega && METODO_LABEL.CONTRAENTREGA,
+    config.pagoTransferencia && METODO_LABEL.TRANSFERENCIA,
+    config.pagoWhatsapp && METODO_LABEL.WHATSAPP,
+  ].filter(Boolean)
+
+  const card = {
+    id: producto.id,
+    slug: producto.slug,
+    nombre: producto.nombre,
+    precio: producto.precio,
+    precioAnterior: producto.precioAnterior,
+    imagenes: producto.imagenes,
+    stock: producto.stock,
+    colores: producto.colores,
+    tallas: producto.tallas,
+    createdAt: producto.createdAt,
+  }
 
   return (
-    <div className="container-page pt-8">
-      <nav className="mb-6 text-xs text-stone-500" aria-label="Ruta">
-        <Link href="/" className="hover:text-ink">Inicio</Link>
-        <span className="mx-1">/</span>
-        {producto.categoria ? (
-          <Link href={`/categoria/${producto.categoria.slug}`} className="hover:text-ink">
-            {producto.categoria.nombre}
-          </Link>
-        ) : (
-          <Link href="/productos" className="hover:text-ink">Catálogo</Link>
-        )}
-        <span className="mx-1">/</span>
-        <span className="text-ink">{producto.nombre}</span>
-      </nav>
+    <>
+      <div className="wrap pt-0 lg:pt-6">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1.45fr)_minmax(360px,1fr)] lg:gap-14 xl:gap-20">
+          <ProductGallery imagenes={producto.imagenes} nombre={producto.nombre} />
 
-      <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
-        <ProductGallery imagenes={producto.imagenes} nombre={producto.nombre} />
+          <div className="lg:sticky lg:top-[140px] lg:self-start lg:pb-10">
+            <nav className="mb-6 hidden text-[11px] uppercase tracking-label text-stone-500 lg:block" aria-label="Ruta">
+              <Link href="/" className="hover:text-ink">Inicio</Link>
+              <span className="mx-2">/</span>
+              {producto.categoria ? (
+                <Link href={`/categoria/${producto.categoria.slug}`} className="hover:text-ink">{producto.categoria.nombre}</Link>
+              ) : (
+                <Link href="/productos" className="hover:text-ink">Colección</Link>
+              )}
+            </nav>
 
-        <div className="lg:sticky lg:top-28 lg:self-start">
-          {producto.categoria && (
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">{producto.categoria.nombre}</p>
-          )}
-          <h1 className="mt-2 text-4xl leading-tight sm:text-5xl">{producto.nombre}</h1>
+            <h1 className="font-display text-4xl font-light leading-[1.05] sm:text-5xl">{producto.nombre}</h1>
 
-          <div className="mt-4 flex items-baseline gap-3">
-            <span className="text-2xl font-semibold">{formatPrice(producto.precio)}</span>
-            {descuento > 0 && (
-              <>
-                <span className="text-lg text-stone-400 line-through">{formatPrice(producto.precioAnterior!)}</span>
-                <span className="chip bg-accent text-white">-{descuento}%</span>
-              </>
-            )}
-          </div>
-
-          <div className="my-8 h-px bg-sand-200" />
-
-          <AddToCart
-            producto={{
-              id: producto.id,
-              slug: producto.slug,
-              nombre: producto.nombre,
-              precio: producto.precio,
-              imagen: producto.imagenes[0] ?? null,
-              stock: producto.stock,
-              tallas: producto.tallas,
-              colores: producto.colores,
-              variantes: producto.variantes,
-            }}
-            whatsapp={config.whatsapp}
-            url={url}
-          />
-
-          {producto.descripcion && (
-            <div className="mt-10">
-              <h2 className="mb-3 font-sans text-sm font-semibold uppercase tracking-widest">Descripción</h2>
-              <div className="whitespace-pre-line text-sm leading-relaxed text-ink-soft">{producto.descripcion}</div>
+            <div className="mt-4 flex items-baseline gap-3 text-[17px]">
+              <span className={cn(descuento > 0 && 'text-sale')}>{formatPrice(producto.precio)}</span>
+              {descuento > 0 && (
+                <>
+                  <span className="text-[15px] text-stone-400 line-through">{formatPrice(producto.precioAnterior!)}</span>
+                  <span className="text-[12px] uppercase tracking-label text-sale">-{descuento}%</span>
+                </>
+              )}
             </div>
-          )}
+            {producto.sku && <p className="mt-2 text-[12px] text-stone-400">Ref. {producto.sku}</p>}
 
-          <ul className="mt-10 space-y-3 rounded-2xl bg-sand-100 p-5 text-sm text-ink-soft">
-            <li className="flex items-center gap-3">
-              <TruckIcon className="shrink-0 text-accent" />
-              {config.envioGratisDesde
-                ? `Envío gratis en compras desde ${formatPrice(config.envioGratisDesde)}`
-                : `Envío a toda Colombia por ${formatPrice(config.costoEnvio)}`}
-            </li>
-            {config.pagoContraentrega && (
-              <li className="flex items-center gap-3">
-                <ShieldIcon className="shrink-0 text-accent" /> Pago contra entrega disponible
-              </li>
-            )}
-            <li className="flex items-center gap-3">
-              <RefreshIcon className="shrink-0 text-accent" /> Cambios por talla sin complicaciones
-            </li>
-          </ul>
-          {producto.sku && <p className="mt-4 text-xs text-stone-400">Ref. {producto.sku}</p>}
+            <div className="my-8 h-px bg-black/10" />
+
+            <AddToCart
+              producto={{
+                id: producto.id,
+                slug: producto.slug,
+                nombre: producto.nombre,
+                precio: producto.precio,
+                precioAnterior: producto.precioAnterior,
+                imagenes: producto.imagenes,
+                stock: producto.stock,
+                tallas: ordenarTallas(producto.tallas),
+                colores: producto.colores,
+                variantes: producto.variantes,
+              }}
+              whatsapp={config.whatsapp}
+              url={url}
+            />
+
+            <div className="mt-10">
+              <Accordion
+                items={[
+                  ...(producto.descripcion
+                    ? [{ title: 'Descripción', open: true, content: <div className="whitespace-pre-line">{producto.descripcion}</div> }]
+                    : []),
+                  {
+                    title: 'Envíos',
+                    content: (
+                      <>
+                        <p>
+                          Enviamos a toda Colombia por {formatPrice(config.costoEnvio)}
+                          {config.envioGratisDesde ? `, y gratis en compras desde ${formatPrice(config.envioGratisDesde)}` : ''}.
+                        </p>
+                        <p className="mt-2">Entrega estimada de 2 a 5 días hábiles según tu ciudad.</p>
+                      </>
+                    ),
+                  },
+                  {
+                    title: 'Cambios',
+                    content: <p>Tienes 15 días desde la entrega para solicitar un cambio de talla. La prenda debe estar sin uso y con sus etiquetas.</p>,
+                  },
+                  ...(metodos.length
+                    ? [{ title: 'Formas de pago', content: <ul className="list-inside list-disc space-y-1">{metodos.map((m) => <li key={m as string}>{m}</li>)}</ul> }]
+                    : []),
+                ]}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
-      {relacionados.length > 0 && (
-        <section className="mt-24">
-          <h2 className="mb-8 text-3xl">También te puede gustar</h2>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-4">
-            {relacionados.map((p) => (
-              <ProductCard key={p.id} producto={p} />
-            ))}
-          </div>
-        </section>
-      )}
-    </div>
+      <ProductCarousel
+        eyebrow="Completa el look"
+        title="También te puede gustar"
+        href={producto.categoria ? `/categoria/${producto.categoria.slug}` : '/productos'}
+        cta="Ver más"
+        productos={relacionados}
+      />
+      <RecentlyViewed actual={card} />
+    </>
   )
 }

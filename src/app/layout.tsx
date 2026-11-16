@@ -1,11 +1,17 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter, Fraunces } from 'next/font/google'
+import { Jost, Cormorant_Garamond } from 'next/font/google'
 import Providers from './providers'
 import { getConfig } from '@/lib/config'
 import './globals.css'
 
-const sans = Inter({ subsets: ['latin'], variable: '--font-sans', display: 'swap' })
-const display = Fraunces({ subsets: ['latin'], variable: '--font-display', display: 'swap' })
+const sans = Jost({ subsets: ['latin'], variable: '--font-sans', display: 'swap' })
+const display = Cormorant_Garamond({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600'],
+  style: ['normal', 'italic'],
+  variable: '--font-display',
+  display: 'swap',
+})
 
 export const dynamic = 'force-dynamic'
 
@@ -31,7 +37,7 @@ export const viewport: Viewport = { themeColor: '#1c1917' }
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" className={`${sans.variable} ${display.variable}`}>
-      <body className="min-h-screen bg-sand-50 font-sans text-ink antialiased">
+      <body className="min-h-screen bg-white font-sans text-ink antialiased">
         <Providers>{children}</Providers>
       </body>
     </html>

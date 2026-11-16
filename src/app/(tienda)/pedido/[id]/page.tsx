@@ -2,10 +2,10 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import ProductImage from '@/components/tienda/ProductImage'
-import { CheckIcon, WhatsappIcon } from '@/components/ui/Icons'
+import { WhatsappIcon } from '@/components/ui/Icons'
 import { prisma } from '@/lib/db'
 import { getConfig } from '@/lib/config'
-import { ESTADO_COLOR, ESTADO_LABEL, METODO_LABEL } from '@/lib/constants'
+import { ESTADO_LABEL, METODO_LABEL } from '@/lib/constants'
 import { cn, formatDate, formatPrice, whatsappLink } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
@@ -36,124 +36,122 @@ export default async function PedidoPage({
 
   const nuevo = searchParams.nuevo === '1' || searchParams.pago === 'ok'
   const pasoActual = PASOS.indexOf(pedido.estado)
+  const cancelado = pedido.estado === 'CANCELADO'
+
+  const label = 'mb-3 text-[11px] uppercase tracking-label text-stone-500'
 
   return (
-    <div className="container-page max-w-3xl pt-12">
-      {searchParams.pago === 'cancelado' && !pedido.pagado ? (
-        <div className="mb-8 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
-          El pago con tarjeta no se completó. Si quieres, escríbenos por WhatsApp y te ayudamos a terminar la compra.
+    <div className="wrap max-w-5xl pb-10 pt-12 lg:pt-20">
+      {searchParams.pago === 'cancelado' && !pedido.pagado && (
+        <div className="mb-10 border border-black/15 p-5 text-[14px]">
+          El pago con tarjeta no se completó. Escríbenos por WhatsApp y te ayudamos a terminar tu compra.
         </div>
-      ) : null}
+      )}
 
-      <div className="text-center">
-        {nuevo && (
-          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-            <CheckIcon width={32} height={32} />
-          </div>
-        )}
-        <h1 className="text-4xl sm:text-5xl">{nuevo ? '¡Gracias por tu compra!' : `Pedido #${pedido.numero}`}</h1>
-        <p className="mt-3 text-stone-500">
-          {nuevo ? (
-            <>
-              Recibimos tu pedido <strong className="text-ink">#{pedido.numero}</strong>. Guarda esta página para consultar su estado.
-            </>
-          ) : (
-            <>Realizado el {formatDate(pedido.createdAt, true)}</>
-          )}
+      <header className="text-center">
+        <p className="eyebrow mb-4 text-stone-500">Pedido #{pedido.numero}</p>
+        <h1 className="font-display text-5xl font-light leading-none sm:text-7xl">
+          {cancelado ? 'Pedido cancelado' : nuevo ? <>Gracias, <em>{pedido.clienteNombre.split(' ')[0]}</em></> : ESTADO_LABEL[pedido.estado]}
+        </h1>
+        <p className="mx-auto mt-5 max-w-md text-[15px] text-stone-500">
+          {nuevo && !cancelado
+            ? 'Recibimos tu pedido. Guarda esta página para consultar su estado cuando quieras.'
+            : `Realizado el ${formatDate(pedido.createdAt, true)}`}
         </p>
-      </div>
+      </header>
 
-      {wa && pedido.estado !== 'CANCELADO' && pedido.metodoPago !== 'STRIPE' && (
-        <div className="mt-8 rounded-2xl border border-[#25D366]/30 bg-[#25D366]/5 p-6 text-center">
-          <p className="font-medium">
-            {pedido.metodoPago === 'WHATSAPP' ? 'Último paso: envíanos tu pedido por WhatsApp' : 'Confirma tu pedido por WhatsApp para agilizar el envío'}
+      {wa && !cancelado && pedido.metodoPago !== 'STRIPE' && (
+        <div className="mx-auto mt-12 max-w-xl bg-bone px-6 py-8 text-center">
+          <p className="text-[12px] uppercase tracking-label">
+            {pedido.metodoPago === 'WHATSAPP' ? 'Último paso' : 'Agiliza tu envío'}
           </p>
-          <p className="mt-1 text-sm text-stone-500">El mensaje ya va listo con el detalle de tu compra.</p>
-          <a href={wa} target="_blank" rel="noreferrer" className="btn-whatsapp mt-4 px-8 py-3">
-            <WhatsappIcon /> Enviar por WhatsApp
+          <p className="mt-2 font-display text-3xl font-light">Envíanos tu pedido por WhatsApp</p>
+          <p className="mt-2 text-[13px] text-stone-500">El mensaje ya va listo con el detalle de tu compra.</p>
+          <a href={wa} target="_blank" rel="noreferrer" className="cta mt-6 bg-[#1f9d55] hover:bg-[#188a49]">
+            <WhatsappIcon width={18} height={18} /> Enviar por WhatsApp
           </a>
         </div>
       )}
 
-      {pedido.metodoPago === 'TRANSFERENCIA' && !pedido.pagado && config.infoTransferencia && pedido.estado !== 'CANCELADO' && (
-        <div className="mt-6 rounded-2xl bg-sand-100 p-6">
-          <p className="mb-2 font-medium">Datos para la transferencia</p>
-          <p className="whitespace-pre-line text-sm text-ink-soft">{config.infoTransferencia}</p>
-          <p className="mt-3 text-sm">
-            Valor a transferir: <strong>{formatPrice(pedido.total)}</strong>. Envíanos el comprobante por WhatsApp.
+      {pedido.metodoPago === 'TRANSFERENCIA' && !pedido.pagado && config.infoTransferencia && !cancelado && (
+        <div className="mx-auto mt-4 max-w-xl border border-black/10 p-6">
+          <p className={label}>Datos para la transferencia</p>
+          <p className="whitespace-pre-line text-[14px]">{config.infoTransferencia}</p>
+          <p className="mt-4 text-[14px]">
+            Valor: <strong className="font-medium">{formatPrice(pedido.total)}</strong>. Envíanos el comprobante por WhatsApp.
           </p>
         </div>
       )}
 
-      <div className="card mt-8 p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-2xl">Estado</h2>
-          <div className="flex gap-2">
-            {pedido.pagado && <span className="chip bg-emerald-100 text-emerald-800">Pagado</span>}
-            <span className={cn('chip', ESTADO_COLOR[pedido.estado])}>{ESTADO_LABEL[pedido.estado]}</span>
-          </div>
-        </div>
-        {pedido.estado !== 'CANCELADO' && (
-          <ol className="mt-6 grid grid-cols-4 gap-2">
-            {PASOS.map((p, i) => (
-              <li key={p} className="text-center">
-                <div className={cn('mx-auto h-1.5 rounded-full', i <= pasoActual ? 'bg-ink' : 'bg-sand-200')} />
-                <p className={cn('mt-2 text-xs', i <= pasoActual ? 'font-medium text-ink' : 'text-stone-400')}>{ESTADO_LABEL[p]}</p>
-              </li>
-            ))}
-          </ol>
-        )}
-      </div>
-
-      <div className="card mt-6 p-6">
-        <h2 className="mb-4 text-2xl">Detalle</h2>
-        <ul className="divide-y divide-sand-200">
-          {pedido.items.map((i) => (
-            <li key={i.id} className="flex items-center gap-4 py-3">
-              <div className="h-16 w-12 shrink-0 overflow-hidden rounded-lg bg-sand-100">
-                <ProductImage src={i.imagen} alt={i.nombre} />
-              </div>
-              <div className="flex-1 text-sm">
-                <p className="font-medium">{i.nombre}</p>
-                <p className="text-xs text-stone-500">
-                  {[i.talla && `Talla ${i.talla}`, i.color, `${i.cantidad} ud.`].filter(Boolean).join(' · ')}
-                </p>
-              </div>
-              <p className="text-sm">{formatPrice(i.precio * i.cantidad)}</p>
+      {!cancelado && (
+        <ol className="mx-auto mt-16 grid max-w-3xl grid-cols-4">
+          {PASOS.map((p, i) => (
+            <li key={p} className="relative text-center">
+              <div className={cn('h-px', i <= pasoActual ? 'bg-ink' : 'bg-black/15')} />
+              <span
+                className={cn(
+                  'absolute left-1/2 top-0 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border',
+                  i <= pasoActual ? 'border-ink bg-ink' : 'border-black/25 bg-white'
+                )}
+              />
+              <p className={cn('mt-4 text-[11px] uppercase tracking-label', i <= pasoActual ? 'text-ink' : 'text-stone-400')}>{ESTADO_LABEL[p]}</p>
             </li>
           ))}
-        </ul>
-        <div className="mt-4 space-y-1.5 border-t border-sand-200 pt-4 text-sm">
-          <div className="flex justify-between"><span className="text-stone-500">Subtotal</span><span>{formatPrice(pedido.subtotal)}</span></div>
-          <div className="flex justify-between"><span className="text-stone-500">Envío</span><span>{pedido.envio ? formatPrice(pedido.envio) : 'Gratis'}</span></div>
-          <div className="flex justify-between pt-2 text-lg font-semibold"><span>Total</span><span>{formatPrice(pedido.total)}</span></div>
-        </div>
-      </div>
+        </ol>
+      )}
 
-      <div className="card mt-6 grid gap-6 p-6 text-sm sm:grid-cols-2">
-        <div>
-          <p className="mb-1 font-medium">Entrega</p>
-          <p className="text-ink-soft">{pedido.clienteNombre}</p>
-          <p className="text-ink-soft">{pedido.direccion}</p>
-          <p className="text-ink-soft">{pedido.ciudad}</p>
-          <p className="text-ink-soft">{pedido.clienteTelefono}</p>
-        </div>
-        <div>
-          <p className="mb-1 font-medium">Pago</p>
-          <p className="text-ink-soft">{METODO_LABEL[pedido.metodoPago]}</p>
+      <div className="mt-16 grid gap-12 lg:grid-cols-[1fr_320px]">
+        <section>
+          <p className={label}>Artículos</p>
+          <ul className="divide-y divide-black/10 border-y border-black/10">
+            {pedido.items.map((i) => (
+              <li key={i.id} className="flex items-center gap-5 py-5">
+                <div className="aspect-[2/3] w-16 shrink-0 overflow-hidden bg-bone">
+                  <ProductImage src={i.imagen} alt={i.nombre} />
+                </div>
+                <div className="flex-1">
+                  <p className="text-[12px] uppercase tracking-wide">{i.nombre}</p>
+                  <p className="mt-1 text-[13px] text-stone-500">
+                    {[i.color, i.talla && `Talla ${i.talla}`, `${i.cantidad} ud.`].filter(Boolean).join(' · ')}
+                  </p>
+                </div>
+                <p className="text-[14px]">{formatPrice(i.precio * i.cantidad)}</p>
+              </li>
+            ))}
+          </ul>
+          <div className="ml-auto mt-6 max-w-xs space-y-2 text-[14px]">
+            <div className="flex justify-between"><span className="text-stone-500">Subtotal</span><span>{formatPrice(pedido.subtotal)}</span></div>
+            <div className="flex justify-between"><span className="text-stone-500">Envío</span><span>{pedido.envio ? formatPrice(pedido.envio) : 'Gratis'}</span></div>
+            <div className="flex justify-between border-t border-black/10 pt-3 text-[15px] font-medium">
+              <span className="uppercase tracking-label">Total</span><span>{formatPrice(pedido.total)}</span>
+            </div>
+          </div>
+        </section>
+
+        <aside className="space-y-8 text-[14px]">
+          <div>
+            <p className={label}>Entrega</p>
+            <p>{pedido.clienteNombre}</p>
+            <p className="text-stone-500">{pedido.direccion}</p>
+            <p className="text-stone-500">{pedido.ciudad}</p>
+            <p className="text-stone-500">{pedido.clienteTelefono}</p>
+          </div>
+          <div>
+            <p className={label}>Pago</p>
+            <p>{METODO_LABEL[pedido.metodoPago]}</p>
+            {pedido.pagado && <p className="text-stone-500">Pago recibido</p>}
+          </div>
           {pedido.notas && (
-            <>
-              <p className="mb-1 mt-3 font-medium">Notas</p>
-              <p className="text-ink-soft">{pedido.notas}</p>
-            </>
+            <div>
+              <p className={label}>Notas</p>
+              <p className="text-stone-500">{pedido.notas}</p>
+            </div>
           )}
-        </div>
+        </aside>
       </div>
 
-      <div className="mt-10 text-center">
-        <Link href="/productos" className="btn-outline px-8 py-3">
-          Seguir comprando
-        </Link>
+      <div className="mt-16 text-center">
+        <Link href="/productos" className="cta-outline">Seguir comprando</Link>
       </div>
     </div>
   )

@@ -10,9 +10,12 @@ export default function WhatsappFloat({ numero, tienda }: { numero: string | nul
       target="_blank"
       rel="noreferrer"
       aria-label="Escríbenos por WhatsApp"
-      className="fixed bottom-5 right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg shadow-black/20 transition hover:scale-105"
+      className="group fixed bottom-5 right-5 z-30 flex h-12 items-center gap-2 rounded-full bg-[#25D366] pl-3.5 pr-3.5 text-white shadow-lg shadow-black/15 transition-all hover:pr-5"
     >
-      <WhatsappIcon width={28} height={28} />
+      <WhatsappIcon width={22} height={22} />
+      <span className="max-w-0 overflow-hidden whitespace-nowrap text-[12px] font-medium uppercase tracking-label transition-all duration-300 group-hover:max-w-[120px]">
+        Escríbenos
+      </span>
     </a>
   )
 }

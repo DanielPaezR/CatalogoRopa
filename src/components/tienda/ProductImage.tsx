@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 
-/** Imagen de producto con marcador elegante cuando no hay foto. */
+/** Imagen de producto con un marcador sobrio cuando no hay foto. */
 export default function ProductImage({
   src,
   alt,
@@ -14,16 +14,9 @@ export default function ProductImage({
 }) {
   if (!src) {
     return (
-      <div
-        className={cn(
-          'flex h-full w-full items-center justify-center bg-gradient-to-br from-sand-100 to-sand-200 text-sand-300',
-          className
-        )}
-        aria-label={alt}
-        role="img"
-      >
-        <svg viewBox="0 0 64 64" className="h-1/3 w-1/3" fill="currentColor" aria-hidden="true">
-          <path d="M22 14l10 6 10-6 10 8-6 8-4-3v25H22V27l-4 3-6-8z" />
+      <div className={cn('flex h-full w-full items-center justify-center bg-bone text-black/[0.07]', className)} aria-label={alt} role="img">
+        <svg viewBox="0 0 64 64" className="h-1/4 w-1/4" fill="none" stroke="currentColor" strokeWidth="1.2" aria-hidden="true">
+          <path d="M24 12c0 4.4 3.6 8 8 8s8-3.6 8-8l12 6-4 10-6-3v27H22V25l-6 3-4-10z" />
         </svg>
       </div>
     )

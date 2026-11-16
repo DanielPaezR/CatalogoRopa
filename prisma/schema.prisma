@@ -124,6 +124,9 @@ model Configuracion {
   heroTitulo        String   @default("Nueva colección")
   heroSubtitulo     String   @default("Prendas pensadas para el día a día, con calidad que se nota.")
   heroImagen        String?
+  editorialTitulo   String   @default("El arte de lo esencial")
+  editorialTexto    String   @default("Siluetas limpias, tejidos nobles y colores que combinan entre sí. Prendas para usar hoy y seguir usando mañana.")
+  editorialImagen   String?
   whatsapp          String?
   email             String?
   telefono          String?
@@ -140,4 +143,10 @@ model Configuracion {
   pagoContraentrega Boolean  @default(true)
   pagoTransferencia Boolean  @default(true)
   updatedAt         DateTime @updatedAt
+}
+
+model Suscriptor {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
 }

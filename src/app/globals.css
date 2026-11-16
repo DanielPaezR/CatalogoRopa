@@ -61,3 +61,49 @@
     display: none;
   }
 }
+
+/* ---------- Tienda (estilo editorial) ---------- */
+@layer components {
+  .wrap {
+    @apply mx-auto w-full max-w-[1680px] px-4 sm:px-6 lg:px-10;
+  }
+  .eyebrow {
+    @apply text-[11px] font-medium uppercase tracking-wide2;
+  }
+  .cta {
+    @apply inline-flex h-12 items-center justify-center gap-2 bg-ink px-8 text-[12px] font-medium uppercase tracking-label text-white
+      transition-colors duration-300 hover:bg-black disabled:cursor-not-allowed disabled:bg-stone-300
+      focus:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2;
+  }
+  .cta-outline {
+    @apply inline-flex h-12 items-center justify-center gap-2 border border-ink bg-transparent px-8 text-[12px] font-medium uppercase
+      tracking-label text-ink transition-colors duration-300 hover:bg-ink hover:text-white disabled:opacity-40
+      focus:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2;
+  }
+  .cta-light {
+    @apply inline-flex h-12 items-center justify-center gap-2 bg-white px-8 text-[12px] font-medium uppercase tracking-label text-ink
+      transition-colors duration-300 hover:bg-ink hover:text-white;
+  }
+  .cta-ghost-light {
+    @apply inline-flex h-12 items-center justify-center gap-2 border border-white/80 px-8 text-[12px] font-medium uppercase
+      tracking-label text-white transition-colors duration-300 hover:bg-white hover:text-ink;
+  }
+  .link-u {
+    @apply relative inline-block after:absolute after:-bottom-0.5 after:left-0 after:h-px after:w-full after:origin-right
+      after:scale-x-0 after:bg-current after:transition-transform after:duration-300 hover:after:origin-left hover:after:scale-x-100;
+  }
+  .link-u-on {
+    @apply relative inline-block after:absolute after:-bottom-0.5 after:left-0 after:h-px after:w-full after:bg-current
+      after:transition-transform after:duration-300 hover:after:scale-x-0;
+  }
+  .field {
+    @apply h-12 w-full rounded-none border border-black/15 bg-white px-4 text-[15px] text-ink placeholder:text-stone-400
+      transition focus:border-ink focus:outline-none;
+  }
+  .field-label {
+    @apply mb-2 block text-[11px] font-medium uppercase tracking-label text-ink;
+  }
+  .icon-btn {
+    @apply inline-flex h-10 w-10 items-center justify-center transition-opacity hover:opacity-60;
+  }
+}

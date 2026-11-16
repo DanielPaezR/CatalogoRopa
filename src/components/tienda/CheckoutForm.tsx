@@ -89,83 +89,86 @@ export default function CheckoutForm({ costoEnvio, envioGratisDesde, metodos, in
     }
   }
 
-  if (!ready) return <div className="container-page py-24 text-center text-stone-400">Cargando…</div>
+  if (!ready) return <div className="wrap py-32 text-center text-[12px] uppercase tracking-label text-stone-400">Cargando…</div>
 
   if (items.length === 0 && !enviando) {
     return (
-      <div className="container-page py-24 text-center">
-        <h1 className="text-4xl">No hay productos en tu carrito</h1>
-        <Link href="/productos" className="btn-primary mt-6">
-          Ir al catálogo
+      <div className="wrap flex flex-col items-center py-32 text-center">
+        <h1 className="font-display text-5xl font-light">Tu bolsa está vacía</h1>
+        <Link href="/productos" className="cta mt-10">
+          Comprar novedades
         </Link>
       </div>
     )
   }
 
   return (
-    <div className="container-page pt-10">
-      <h1 className="mb-8 text-4xl sm:text-5xl">Finalizar compra</h1>
-      <form onSubmit={submit} className="grid gap-10 lg:grid-cols-[1fr_400px]">
-        <div className="space-y-10">
+    <div className="wrap pb-10 pt-10 lg:pt-14">
+      <h1 className="mb-12 font-display text-5xl font-light sm:text-6xl">Finalizar compra</h1>
+      <form onSubmit={submit} className="grid gap-12 lg:grid-cols-[1fr_440px] lg:gap-20">
+        <div className="space-y-14">
           <section>
-            <h2 className="mb-5 text-2xl">Tus datos</h2>
+            <h2 className="mb-6 flex items-baseline gap-3 border-b border-black/10 pb-4 font-sans text-[13px] uppercase tracking-label"><span className="font-display text-2xl italic">01</span> Tus datos</h2>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
-                <label className="label" htmlFor="nombre">Nombre completo *</label>
-                <input id="nombre" required minLength={3} autoComplete="name" className="input" value={form.nombre} onChange={set('nombre')} />
+                <label className="field-label" htmlFor="nombre">Nombre completo *</label>
+                <input id="nombre" required minLength={3} autoComplete="name" className="field" value={form.nombre} onChange={set('nombre')} />
               </div>
               <div>
-                <label className="label" htmlFor="telefono">Celular / WhatsApp *</label>
-                <input id="telefono" required type="tel" autoComplete="tel" inputMode="tel" placeholder="300 123 4567" className="input" value={form.telefono} onChange={set('telefono')} />
+                <label className="field-label" htmlFor="telefono">Celular / WhatsApp *</label>
+                <input id="telefono" required type="tel" autoComplete="tel" inputMode="tel" placeholder="300 123 4567" className="field" value={form.telefono} onChange={set('telefono')} />
               </div>
               <div>
-                <label className="label" htmlFor="email">Correo (opcional)</label>
-                <input id="email" type="email" autoComplete="email" className="input" value={form.email} onChange={set('email')} />
+                <label className="field-label" htmlFor="email">Correo (opcional)</label>
+                <input id="email" type="email" autoComplete="email" className="field" value={form.email} onChange={set('email')} />
               </div>
             </div>
           </section>
 
           <section>
-            <h2 className="mb-5 text-2xl">Entrega</h2>
+            <h2 className="mb-6 flex items-baseline gap-3 border-b border-black/10 pb-4 font-sans text-[13px] uppercase tracking-label"><span className="font-display text-2xl italic">02</span> Entrega</h2>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
-                <label className="label" htmlFor="direccion">Dirección *</label>
-                <input id="direccion" required minLength={5} autoComplete="street-address" placeholder="Calle 10 # 20-30, apto 401, barrio…" className="input" value={form.direccion} onChange={set('direccion')} />
+                <label className="field-label" htmlFor="direccion">Dirección *</label>
+                <input id="direccion" required minLength={5} autoComplete="street-address" placeholder="Calle 10 # 20-30, apto 401, barrio…" className="field" value={form.direccion} onChange={set('direccion')} />
               </div>
               <div>
-                <label className="label" htmlFor="ciudad">Ciudad / municipio *</label>
-                <input id="ciudad" required list="ciudades" autoComplete="address-level2" className="input" value={form.ciudad} onChange={set('ciudad')} />
+                <label className="field-label" htmlFor="ciudad">Ciudad / municipio *</label>
+                <input id="ciudad" required list="ciudades" autoComplete="address-level2" className="field" value={form.ciudad} onChange={set('ciudad')} />
                 <datalist id="ciudades">
                   {CIUDADES.map((c) => <option key={c} value={c} />)}
                 </datalist>
               </div>
               <div className="sm:col-span-2">
-                <label className="label" htmlFor="notas">Notas del pedido (opcional)</label>
-                <textarea id="notas" rows={3} maxLength={500} placeholder="Indicaciones para la entrega, horario, etc." className="input" value={form.notas} onChange={set('notas')} />
+                <label className="field-label" htmlFor="notas">Notas del pedido (opcional)</label>
+                <textarea id="notas" rows={3} maxLength={500} placeholder="Indicaciones para la entrega, horario, etc." className="field h-auto py-3" value={form.notas} onChange={set('notas')} />
               </div>
             </div>
           </section>
 
           <section>
-            <h2 className="mb-5 text-2xl">Pago</h2>
+            <h2 className="mb-6 flex items-baseline gap-3 border-b border-black/10 pb-4 font-sans text-[13px] uppercase tracking-label"><span className="font-display text-2xl italic">03</span> Pago</h2>
             {metodos.length === 0 ? (
               <p className="text-sm text-red-600">No hay métodos de pago habilitados. Contáctanos para completar tu compra.</p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {metodos.map((m) => (
                   <label
                     key={m}
                     className={cn(
-                      'flex cursor-pointer gap-4 rounded-2xl border bg-white p-4 transition',
-                      metodo === m ? 'border-ink ring-1 ring-ink' : 'border-sand-300 hover:border-ink/50'
+                      'flex cursor-pointer gap-4 border bg-white p-5 transition',
+                      metodo === m ? 'border-ink' : 'border-black/15 hover:border-black/40'
                     )}
                   >
-                    <input type="radio" name="metodo" value={m} checked={metodo === m} onChange={() => setMetodo(m)} className="mt-1 accent-ink" />
+                    <input type="radio" name="metodo" value={m} checked={metodo === m} onChange={() => setMetodo(m)} className="sr-only" />
+                    <span className={cn('mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border', metodo === m ? 'border-ink' : 'border-black/25')}>
+                      {metodo === m && <span className="h-2 w-2 rounded-full bg-ink" />}
+                    </span>
                     <div>
-                      <p className="font-medium">{METODO_LABEL[m]}</p>
-                      <p className="text-sm text-stone-500">{DESCRIPCION_METODO[m]}</p>
+                      <p className="text-[13px] uppercase tracking-wide">{METODO_LABEL[m]}</p>
+                      <p className="mt-1 text-[13px] text-stone-500">{DESCRIPCION_METODO[m]}</p>
                       {m === 'TRANSFERENCIA' && metodo === m && infoTransferencia && (
-                        <p className="mt-2 whitespace-pre-line rounded-xl bg-sand-100 p-3 text-sm text-ink-soft">{infoTransferencia}</p>
+                        <p className="mt-3 whitespace-pre-line bg-bone p-4 text-[13px] text-ink-soft">{infoTransferencia}</p>
                       )}
                     </div>
                   </label>
@@ -175,43 +178,43 @@ export default function CheckoutForm({ costoEnvio, envioGratisDesde, metodos, in
           </section>
         </div>
 
-        <aside className="card h-fit space-y-4 p-6 lg:sticky lg:top-28">
-          <h2 className="text-2xl">Tu pedido</h2>
+        <aside className="h-fit space-y-5 bg-bone p-8 lg:sticky lg:top-[140px]">
+          <p className="text-[12px] uppercase tracking-label">Tu pedido</p>
           <ul className="max-h-80 space-y-4 overflow-y-auto">
             {items.map((item) => (
               <li key={itemKey(item)} className="flex gap-3">
-                <div className="relative h-16 w-12 shrink-0 overflow-hidden rounded-lg bg-sand-100">
+                <div className="relative aspect-[2/3] w-14 shrink-0 bg-white">
                   <ProductImage src={item.imagen} alt={item.nombre} />
-                  <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-[10px] text-white">
+                  <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-[10px] text-white">
                     {item.cantidad}
                   </span>
                 </div>
                 <div className="min-w-0 flex-1 text-sm">
-                  <p className="truncate font-medium">{item.nombre}</p>
+                  <p className="truncate text-[12px] uppercase tracking-wide">{item.nombre}</p>
                   <p className="text-xs text-stone-500">{[item.talla && `Talla ${item.talla}`, item.color].filter(Boolean).join(' · ')}</p>
                 </div>
                 <p className="text-sm">{formatPrice(item.precio * item.cantidad)}</p>
               </li>
             ))}
           </ul>
-          <div className="space-y-2 border-t border-sand-200 pt-4 text-sm">
+          <div className="space-y-2 border-t border-black/10 pt-5 text-[14px]">
             <div className="flex justify-between">
               <span className="text-stone-500">Subtotal</span>
               <span>{formatPrice(subtotal)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-stone-500">Envío</span>
-              <span>{envio === 0 ? <span className="font-medium text-emerald-700">Gratis</span> : formatPrice(envio)}</span>
+              <span>{envio === 0 ? 'Gratis' : formatPrice(envio)}</span>
             </div>
           </div>
-          <div className="flex justify-between border-t border-sand-200 pt-4 text-lg font-semibold">
-            <span>Total</span>
+          <div className="flex justify-between border-t border-black/10 pt-5 text-[15px] font-medium">
+            <span className="uppercase tracking-label">Total</span>
             <span>{formatPrice(subtotal + envio)}</span>
           </div>
-          <button type="submit" disabled={enviando || metodos.length === 0} className="btn-primary w-full py-3.5">
+          <button type="submit" disabled={enviando || metodos.length === 0} className="cta h-14 w-full">
             {enviando ? 'Procesando…' : metodo === 'STRIPE' ? 'Ir a pagar' : 'Confirmar pedido'}
           </button>
-          <p className="text-center text-xs text-stone-400">Al confirmar aceptas que te contactemos para coordinar la entrega.</p>
+          <p className="text-center text-[11px] text-stone-500">Al confirmar aceptas que te contactemos para coordinar la entrega.</p>
         </aside>
       </form>
     </div>

@@ -14,6 +14,9 @@ export type Settings = {
   heroTitulo: string
   heroSubtitulo: string
   heroImagen: string | null
+  editorialTitulo: string
+  editorialTexto: string
+  editorialImagen: string | null
   whatsapp: string | null
   email: string | null
   telefono: string | null
@@ -105,6 +108,21 @@ export default function SettingsForm({ initial, stripe }: { initial: Settings; s
         <div className="sm:col-span-2">
           <Field label="Imagen de portada" hint="Si no subes una, se usa la foto de un producto destacado.">
             <ImageUploader single value={s.heroImagen ? [s.heroImagen] : []} onChange={(v) => setS({ ...s, heroImagen: v[0] ?? null })} />
+          </Field>
+        </div>
+      </section>
+
+      <section className="card grid gap-4 p-6 sm:grid-cols-2">
+        <h2 className="font-sans text-base font-semibold sm:col-span-2">Bloque editorial (inicio)</h2>
+        <Field label="Título">
+          <input className="input" {...txt('editorialTitulo')} />
+        </Field>
+        <Field label="Texto">
+          <input className="input" {...txt('editorialTexto')} />
+        </Field>
+        <div className="sm:col-span-2">
+          <Field label="Imagen" hint="Foto de campaña. Si no subes una, se usa la de un producto.">
+            <ImageUploader single value={s.editorialImagen ? [s.editorialImagen] : []} onChange={(v) => setS({ ...s, editorialImagen: v[0] ?? null })} />
           </Field>
         </div>
       </section>

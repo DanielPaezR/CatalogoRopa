@@ -1,198 +1,210 @@
 import Link from 'next/link'
+import Marquee from '@/components/tienda/Marquee'
 import ProductCard from '@/components/tienda/ProductCard'
+import ProductCarousel from '@/components/tienda/ProductCarousel'
 import ProductImage from '@/components/tienda/ProductImage'
-import { ChevronRightIcon, RefreshIcon, ShieldIcon, TruckIcon } from '@/components/ui/Icons'
+import { ArrowRightIcon, RefreshIcon, ShieldIcon, TruckIcon, WhatsappIcon } from '@/components/ui/Icons'
 import { prisma } from '@/lib/db'
 import { getConfig } from '@/lib/config'
-import { cardSelect, getCategoriasMenu } from '@/lib/catalogo'
-import { formatPrice } from '@/lib/utils'
+import { cardSelect, getCategoriasConPortada } from '@/lib/catalogo'
+import { cn, formatPrice, whatsappLink } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
-function SectionHeader({ title, href, cta }: { title: string; href?: string; cta?: string }) {
-  return (
-    <div className="mb-8 flex items-end justify-between gap-4">
-      <h2 className="text-3xl sm:text-4xl">{title}</h2>
-      {href && (
-        <Link href={href} className="flex shrink-0 items-center gap-1 text-sm font-medium text-ink-soft hover:text-ink">
-          {cta ?? 'Ver todo'} <ChevronRightIcon width={16} height={16} />
-        </Link>
-      )}
-    </div>
-  )
-}
-
 export default async function HomePage() {
-  const [config, categorias, destacados, nuevos, ofertas, totalProductos] = await Promise.all([
+  const [config, categorias, destacados, nuevos, ofertas] = await Promise.all([
     getConfig(),
-    getCategoriasMenu(),
+    getCategoriasConPortada(),
     prisma.producto.findMany({
       where: { activo: true, destacado: true },
       select: cardSelect,
       orderBy: { updatedAt: 'desc' },
       take: 8,
     }),
-    prisma.producto.findMany({ where: { activo: true }, select: cardSelect, orderBy: { createdAt: 'desc' }, take: 8 }),
+    prisma.producto.findMany({ where: { activo: true }, select: cardSelect, orderBy: { createdAt: 'desc' }, take: 12 }),
     prisma.producto.findMany({
       where: { activo: true, precioAnterior: { not: null }, stock: { gt: 0 } },
       select: cardSelect,
       orderBy: { updatedAt: 'desc' },
-      take: 4,
+      take: 12,
     }),
-    prisma.producto.count({ where: { activo: true } }),
   ])
 
-  // Imagen de portada para cada categoría: la propia o la del producto más reciente
-  const portadas = await Promise.all(
-    categorias.map(async (c) => {
-      if (c.imagen) return c.imagen
-      const p = await prisma.producto.findFirst({
-        where: { activo: true, categoriaId: c.id, imagenes: { isEmpty: false } },
-        orderBy: { createdAt: 'desc' },
-        select: { imagenes: true },
-      })
-      return p?.imagenes[0] ?? null
-    })
-  )
-
-  const heroImg = config.heroImagen || destacados.find((p) => p.imagenes[0])?.imagenes[0] || nuevos.find((p) => p.imagenes[0])?.imagenes[0]
+  // La cuadrícula de favoritos se muestra en filas completas de 4
+  const favoritos = destacados.length >= 4 ? destacados.slice(0, Math.floor(destacados.length / 4) * 4) : destacados
+  const conFoto = [...destacados, ...nuevos].filter((p) => p.imagenes[0])
+  const heroImg = config.heroImagen
+  const diptico = !heroImg && conFoto.length >= 2 ? [conFoto[0].imagenes[0], conFoto[1].imagenes[1] ?? conFoto[1].imagenes[0]] : null
+  const editorialImg = config.editorialImagen || conFoto[2]?.imagenes[0] || conFoto[0]?.imagenes[1] || null
+  const editorialImg2 = conFoto[3]?.imagenes[0] || null
+  const wa = whatsappLink(config.whatsapp, `¡Hola ${config.nombreTienda}! Quiero asesoría para elegir mi talla.`)
+  const vacia = nuevos.length === 0
 
   return (
     <>
-      {/* Hero */}
-      <section className="container-page pt-6 sm:pt-10">
-        <div className="relative grid overflow-hidden rounded-3xl bg-sand-100 lg:grid-cols-2">
-          <div className="relative z-10 flex flex-col justify-center gap-6 px-6 py-14 sm:px-12 lg:py-24">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">{config.nombreTienda}</p>
-            <h1 className="text-5xl leading-[1.05] sm:text-6xl lg:text-7xl">{config.heroTitulo}</h1>
-            <p className="max-w-md text-base text-ink-soft sm:text-lg">{config.heroSubtitulo}</p>
-            <div className="flex flex-wrap gap-3">
-              <Link href="/productos" className="btn-primary px-7 py-3">
-                Comprar ahora
-              </Link>
-              {ofertas.length > 0 && (
-                <Link href="/productos?ofertas=1" className="btn-outline px-7 py-3">
-                  Ver ofertas
+      {/* ---------- Portada ---------- */}
+      <section className="relative h-[100svh] min-h-[600px] w-full overflow-hidden bg-bone">
+        {heroImg ? (
+          <img src={heroImg} alt="" className="absolute inset-0 h-full w-full animate-kenburns object-cover" />
+        ) : diptico ? (
+          <div className="absolute inset-0 grid grid-cols-2">
+            {diptico.map((src, i) => (
+              <div key={i} className="relative overflow-hidden">
+                <img src={src} alt="" className="absolute inset-0 h-full w-full animate-kenburns object-cover" style={{ animationDelay: `${i * 150}ms` }} />
+              </div>
+            ))}
+          </div>
+        ) : null}
+        {(heroImg || diptico) && <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-black/25" />}
+
+        <div className={cn('relative flex h-full flex-col justify-end pb-16 sm:pb-20', heroImg || diptico ? 'text-white' : 'text-ink')}>
+          <div className="wrap">
+            <p className="eyebrow mb-5 animate-rise" style={{ animationDelay: '200ms' }}>
+              {config.nombreTienda} — {new Date().getFullYear()}
+            </p>
+            <h1
+              className="max-w-5xl animate-rise font-display text-[15vw] font-light leading-[0.9] tracking-tight sm:text-[10vw] lg:text-[8.5vw]"
+              style={{ animationDelay: '350ms' }}
+            >
+              {config.heroTitulo}
+            </h1>
+            <div className="mt-8 flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
+              <p className="max-w-md animate-rise text-[15px] leading-relaxed opacity-90 sm:text-base" style={{ animationDelay: '500ms' }}>
+                {config.heroSubtitulo}
+              </p>
+              <div className="flex animate-rise flex-col gap-3 sm:flex-row" style={{ animationDelay: '650ms' }}>
+                <Link href="/productos" className={heroImg || diptico ? 'cta-light' : 'cta'}>
+                  Descubrir colección
                 </Link>
+                {ofertas.length > 0 && (
+                  <Link href="/productos?ofertas=1" className={heroImg || diptico ? 'cta-ghost-light' : 'cta-outline'}>
+                    Ofertas
+                  </Link>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- Novedades ---------- */}
+      <ProductCarousel eyebrow="Recién llegado" title="Novedades" href="/productos" cta="Ver todo" productos={nuevos} />
+
+      {/* ---------- Categorías ---------- */}
+      {categorias.length > 0 && (
+        <section className="px-4 sm:px-6 lg:px-10">
+          <div
+            className={cn(
+              'grid gap-2 sm:gap-3',
+              categorias.length === 1 ? 'grid-cols-1' : categorias.length === 2 || categorias.length === 4 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-3'
+            )}
+          >
+            {categorias.slice(0, 6).map((c) => (
+              <Link key={c.id} href={`/categoria/${c.slug}`} className="group relative block aspect-[4/5] overflow-hidden bg-bone sm:aspect-[3/4]">
+                <ProductImage src={c.portada} alt={c.nombre} className="transition duration-[1.2s] ease-out group-hover:scale-105" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 flex flex-col items-center p-8 text-center text-white">
+                  <h3 className="font-display text-5xl font-light">{c.nombre}</h3>
+                  <span className="link-u-on mt-4 text-[11px] uppercase tracking-label">Descubrir</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ---------- Editorial ---------- */}
+      {!vacia && (
+        <section className="mt-16 grid bg-bone lg:mt-24 lg:grid-cols-2">
+          <div className="relative aspect-[4/5] overflow-hidden lg:aspect-auto lg:min-h-[760px]">
+            <ProductImage src={editorialImg} alt="" />
+          </div>
+          <div className="flex flex-col justify-center px-6 py-16 sm:px-12 lg:px-20">
+            <p className="eyebrow mb-6 text-stone-500">Editorial</p>
+            <h2 className="font-display text-5xl font-light leading-[0.95] sm:text-6xl xl:text-7xl">{config.editorialTitulo}</h2>
+            <p className="mt-6 max-w-md text-[15px] leading-relaxed text-ink-soft">{config.editorialTexto}</p>
+            <div className="mt-10 flex flex-wrap items-end gap-8">
+              <Link href="/productos" className="cta">Comprar ahora</Link>
+              {editorialImg2 && (
+                <div className="hidden aspect-[3/4] w-40 overflow-hidden xl:block">
+                  <img src={editorialImg2} alt="" loading="lazy" className="h-full w-full object-cover" />
+                </div>
               )}
             </div>
           </div>
-          <div className="relative min-h-[320px] lg:min-h-[520px]">
-            {heroImg ? (
-              <img src={heroImg} alt="" className="absolute inset-0 h-full w-full object-cover" />
-            ) : (
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,#e8c9b5,transparent_55%),radial-gradient(circle_at_70%_70%,#d6cbbb,transparent_50%)]">
-                <div className="flex h-full items-center justify-center">
-                  <span className="font-display text-[9rem] leading-none text-white/70 sm:text-[12rem]">
-                    {config.nombreTienda.charAt(0)}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* Beneficios */}
-      <section className="container-page mt-10">
-        <div className="grid gap-4 sm:grid-cols-3">
-          {[
-            {
-              icon: TruckIcon,
-              title: config.envioGratisDesde ? `Envío gratis desde ${formatPrice(config.envioGratisDesde)}` : 'Envíos a toda Colombia',
-              text: 'Despachamos a todo el país.',
-            },
-            {
-              icon: ShieldIcon,
-              title: config.pagoContraentrega ? 'Paga al recibir' : 'Compra segura',
-              text: config.pagoContraentrega ? 'Pago contra entrega disponible.' : 'Tus datos están protegidos.',
-            },
-            { icon: RefreshIcon, title: 'Cambios fáciles', text: 'Si no te queda, te ayudamos con el cambio.' },
-          ].map((b) => (
-            <div key={b.title} className="flex items-center gap-4 rounded-2xl border border-sand-200 bg-white px-5 py-4">
-              <div className="rounded-full bg-accent-light p-2.5 text-accent">
-                <b.icon />
-              </div>
-              <div>
-                <p className="text-sm font-semibold">{b.title}</p>
-                <p className="text-xs text-stone-500">{b.text}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Categorías */}
-      {categorias.length > 0 && (
-        <section className="container-page mt-20">
-          <SectionHeader title="Compra por categoría" />
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-            {categorias.map((c, i) => (
-              <Link
-                key={c.id}
-                href={`/categoria/${c.slug}`}
-                className="group relative aspect-[4/5] overflow-hidden rounded-2xl bg-sand-200"
-              >
-                <ProductImage src={portadas[i]} alt={c.nombre} className="transition duration-500 group-hover:scale-105" />
-                <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/10 to-transparent" />
-                <div className="absolute inset-x-0 bottom-0 p-5 text-white">
-                  <p className="font-display text-2xl">{c.nombre}</p>
-                  {c.descripcion && <p className="mt-1 line-clamp-1 text-xs text-white/80">{c.descripcion}</p>}
-                </div>
-              </Link>
-            ))}
-          </div>
         </section>
       )}
 
-      {/* Destacados */}
+      {/* ---------- Favoritos ---------- */}
       {destacados.length > 0 && (
-        <section className="container-page mt-20">
-          <SectionHeader title="Favoritos de la casa" href="/productos" />
-          <div className="grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 lg:grid-cols-4">
-            {destacados.map((p, i) => (
-              <ProductCard key={p.id} producto={p} eager={i < 4} />
+        <section className="wrap py-16 lg:py-24">
+          <div className="mb-10 flex flex-col items-center text-center">
+            <p className="eyebrow mb-3 text-stone-500">Selección</p>
+            <h2 className="font-display text-4xl font-light sm:text-5xl">Favoritos de la casa</h2>
+          </div>
+          <div className="grid grid-cols-2 gap-x-2 gap-y-10 sm:gap-x-3 lg:grid-cols-4">
+            {favoritos.map((p, i) => (
+              <ProductCard key={p.id} producto={p} eager={i < 2} />
             ))}
           </div>
+          <div className="mt-12 flex justify-center">
+            <Link href="/productos" className="cta-outline">Ver toda la colección</Link>
+          </div>
         </section>
       )}
 
-      {/* Ofertas */}
+      <Marquee items={['Nueva colección', 'Envíos a toda Colombia', config.pagoContraentrega ? 'Paga al recibir' : 'Compra segura', 'Cambios fáciles']} />
+
+      {/* ---------- Ofertas ---------- */}
       {ofertas.length > 0 && (
-        <section className="mt-20 bg-accent-light py-16">
-          <div className="container-page">
-            <SectionHeader title="En oferta" href="/productos?ofertas=1" cta="Todas las ofertas" />
-            <div className="grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-4">
-              {ofertas.map((p) => (
-                <ProductCard key={p.id} producto={p} />
-              ))}
-            </div>
-          </div>
+        <ProductCarousel eyebrow="Precios especiales" title="Ofertas" href="/productos?ofertas=1" cta="Ver ofertas" productos={ofertas} />
+      )}
+
+      {/* ---------- Tienda vacía ---------- */}
+      {vacia && (
+        <section className="wrap flex flex-col items-center py-28 text-center">
+          <p className="eyebrow mb-4 text-stone-500">Próximamente</p>
+          <h2 className="font-display text-5xl font-light">La colección está en camino</h2>
+          <p className="mt-4 max-w-md text-stone-500">Estamos preparando cada prenda. Déjanos tu correo abajo y sé la primera en saberlo.</p>
         </section>
       )}
 
-      {/* Novedades */}
-      <section className="container-page mt-20">
-        {nuevos.length > 0 ? (
-          <>
-            <SectionHeader title="Recién llegados" href="/productos" cta={`Ver los ${totalProductos} productos`} />
-            <div className="grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 lg:grid-cols-4">
-              {nuevos.map((p) => (
-                <ProductCard key={p.id} producto={p} />
-              ))}
-            </div>
-          </>
-        ) : (
-          <div className="card px-6 py-16 text-center">
-            <h2 className="text-3xl">Muy pronto, nueva colección</h2>
-            <p className="mx-auto mt-3 max-w-md text-stone-500">
-              Estamos preparando las prendas. Vuelve pronto o escríbenos para conocer las novedades.
-            </p>
-            <Link href="/contacto" className="btn-primary mt-6">
-              Contáctanos
-            </Link>
-          </div>
-        )}
+      {/* ---------- Servicios ---------- */}
+      <section className="wrap grid gap-10 border-t border-black/10 py-16 sm:grid-cols-2 lg:grid-cols-4 lg:py-20">
+        {[
+          {
+            icon: TruckIcon,
+            title: 'Envíos nacionales',
+            text: config.envioGratisDesde ? `Gratis en compras desde ${formatPrice(config.envioGratisDesde)}.` : 'Llegamos a toda Colombia.',
+          },
+          {
+            icon: ShieldIcon,
+            title: config.pagoContraentrega ? 'Paga al recibir' : 'Compra segura',
+            text: config.pagoContraentrega ? 'Pago contra entrega en tu ciudad.' : 'Tus datos siempre protegidos.',
+          },
+          { icon: RefreshIcon, title: 'Cambios fáciles', text: 'Si la talla no es, te ayudamos con el cambio.' },
+          { icon: WhatsappIcon, title: 'Asesoría personal', text: 'Te ayudamos a elegir por WhatsApp.', href: wa },
+        ].map((b) => {
+          const inner = (
+            <>
+              <b.icon width={22} height={22} />
+              <p className="mt-4 text-[12px] font-medium uppercase tracking-label">{b.title}</p>
+              <p className="mt-2 text-[14px] text-stone-500">{b.text}</p>
+              {b.href && (
+                <span className="mt-3 inline-flex items-center gap-1 text-[12px] uppercase tracking-label">
+                  Escríbenos <ArrowRightIcon width={14} height={14} />
+                </span>
+              )}
+            </>
+          )
+          return b.href ? (
+            <a key={b.title} href={b.href} target="_blank" rel="noreferrer" className="block hover:opacity-70">
+              {inner}
+            </a>
+          ) : (
+            <div key={b.title}>{inner}</div>
+          )
+        })}
       </section>
     </>
   )
