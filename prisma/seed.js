@@ -1,5 +1,8 @@
 // Inicializa la base de datos: usuario administrador, configuración y categorías base.
 // Es idempotente: se ejecuta en cada arranque y solo crea lo que falte.
+for (const name of ['PRISMA_QUERY_ENGINE_LIBRARY', 'PRISMA_QUERY_ENGINE_BINARY']) {
+  if (process.env[name] && !require('fs').existsSync(process.env[name])) delete process.env[name]
+}
 const { PrismaClient } = require('@prisma/client')
 const bcrypt = require('bcryptjs')
 const { cargarDemo } = require('./demo')
