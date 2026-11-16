@@ -9,7 +9,7 @@ Tienda de ropa para Colombia (precios en COP) con catálogo, carrito, pedidos po
 - Catálogo con búsqueda, filtros (categoría, talla, ofertas, disponibles, rango de precio), orden y paginación.
 - Ficha de producto con galería, selección de talla/color con stock por combinación y botón "Preguntar por WhatsApp".
 - Carrito persistente (cajón lateral + página), con barra de "envío gratis" y sincronización de precio/stock.
-- Checkout sin registro: WhatsApp, contra entrega, transferencia/Nequi y tarjeta (Stripe, opcional).
+- Checkout sin registro: pago en línea con **Wompi** (tarjeta, PSE, Nequi, botón Bancolombia), WhatsApp, contra entrega y transferencia.
 - Página de pedido con seguimiento de estado y mensaje de WhatsApp prellenado con el detalle de la compra.
 
 **Panel (`/admin`)**
@@ -28,8 +28,17 @@ El inventario se descuenta al crear el pedido (de forma atómica, sin sobreventa
    - `DATABASE_URL` → referencia a la del Postgres (`${{Postgres.DATABASE_URL}}`).
    - `NEXTAUTH_SECRET` → recomendado (`openssl rand -base64 32`). Si falta se deriva uno automáticamente.
    - `ADMIN_EMAIL` / `ADMIN_PASSWORD` → opcional, administrador inicial (por defecto `admin@tienda.com` / `admin123`).
-   - `STRIPE_SECRET_KEY` y `STRIPE_WEBHOOK_SECRET` → opcional, habilita pago con tarjeta. Webhook: `https://TU-DOMINIO/api/stripe/webhook` con eventos `checkout.session.completed`, `checkout.session.expired`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`.
+   - `WOMPI_PUBLIC_KEY`, `WOMPI_INTEGRITY_SECRET`, `WOMPI_EVENTS_SECRET` → habilitan el pago en línea (ver abajo).
 3. Al arrancar, `scripts/start.sh` sincroniza el esquema (`prisma db push`), crea admin/configuración/categorías base si faltan y lanza el servidor. Healthcheck: `/api/health`.
+
+### Pagos con Wompi
+
+1. Crea la cuenta del comercio en [comercios.wompi.co](https://comercios.wompi.co) y entra a **Desarrolladores**.
+2. Copia a las variables de Railway: llave pública (`WOMPI_PUBLIC_KEY`), secreto de integridad (`WOMPI_INTEGRITY_SECRET`) y secreto de eventos (`WOMPI_EVENTS_SECRET`). Empieza con las de **pruebas** (`pub_test_…`); el panel mostrará "Modo pruebas".
+3. En Wompi → Desarrolladores, pega como **URL de eventos**: `https://TU-DOMINIO/api/wompi/eventos` (el panel la muestra en Configuración).
+4. Cuando todo funcione, cambia las tres variables por las de producción (`pub_prod_…`).
+
+Flujo: el cliente confirma el pedido → se reservan las prendas → paga en el checkout de Wompi → vuelve a la página de su pedido, donde el pago se verifica contra el API de Wompi; los pagos que se confirman después (PSE) llegan por la URL de eventos (firma verificada). Los pedidos sin pago en 2 horas se cancelan y el stock se libera.
 
 ### Catálogo de muestra
 
@@ -47,4 +56,4 @@ npm run db:push && npm run db:seed
 npm run dev                   # http://localhost:3000
 ```
 
-Stack: Next.js 14 (App Router) · Prisma 5 + PostgreSQL · NextAuth (credenciales) · Tailwind CSS · Stripe (opcional).
+Stack: Next.js 14 (App Router) · Prisma 5 + PostgreSQL · NextAuth (credenciales) · Tailwind CSS · Wompi.

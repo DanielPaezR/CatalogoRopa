@@ -3,7 +3,10 @@ import PasswordForm from '@/components/admin/PasswordForm'
 import SettingsForm from '@/components/admin/SettingsForm'
 import DemoCleaner from '@/components/admin/DemoCleaner'
 import { requireAdminPage } from '@/lib/auth'
-import { getConfig, stripeEnabled } from '@/lib/config'
+import { headers } from 'next/headers'
+import { getConfig } from '@/lib/config'
+import { wompiEnabled, wompiSandbox } from '@/lib/wompi'
+import { baseUrlFromHeaders } from '@/lib/utils'
 import { prisma } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
@@ -21,7 +24,15 @@ export default async function ConfiguracionPage() {
       <PageHeader title="Configuración" description="Datos de la tienda, envíos, pagos y acceso." />
       <div className="space-y-6">
         <DemoCleaner cantidad={demo} />
-        <SettingsForm initial={config} stripe={stripeEnabled()} />
+        <SettingsForm
+          initial={config}
+          wompi={{
+            activo: wompiEnabled(),
+            pruebas: wompiSandbox(),
+            eventos: Boolean(process.env.WOMPI_EVENTS_SECRET),
+            urlEventos: `${baseUrlFromHeaders(headers())}/api/wompi/eventos`,
+          }}
+        />
         <section className="card flex flex-wrap items-center justify-between gap-4 p-6">
           <div>
             <h2 className="font-sans text-base font-semibold">Suscriptores del boletín</h2>

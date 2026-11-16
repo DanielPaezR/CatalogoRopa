@@ -22,7 +22,7 @@ const DESCRIPCION_METODO: Record<string, string> = {
   WHATSAPP: 'Te escribimos por WhatsApp para confirmar tu pedido y acordar el pago.',
   CONTRAENTREGA: 'Pagas en efectivo cuando recibes tu pedido.',
   TRANSFERENCIA: 'Te mostramos los datos para transferir al confirmar el pedido.',
-  STRIPE: 'Paga de forma segura con tarjeta de crédito o débito.',
+  WOMPI: 'Tarjeta de crédito o débito, PSE, Nequi o botón Bancolombia. Pago seguro procesado por Wompi.',
 }
 
 const CIUDADES = ['Bogotá', 'Medellín', 'Cali', 'Barranquilla', 'Cartagena', 'Bucaramanga', 'Pereira', 'Manizales', 'Cúcuta', 'Ibagué', 'Santa Marta', 'Villavicencio', 'Pasto', 'Armenia', 'Neiva', 'Montería', 'Popayán', 'Tunja', 'Valledupar', 'Sincelejo']
@@ -212,7 +212,7 @@ export default function CheckoutForm({ costoEnvio, envioGratisDesde, metodos, in
             <span>{formatPrice(subtotal + envio)}</span>
           </div>
           <button type="submit" disabled={enviando || metodos.length === 0} className="cta h-14 w-full">
-            {enviando ? 'Procesando…' : metodo === 'STRIPE' ? 'Ir a pagar' : 'Confirmar pedido'}
+            {enviando ? 'Procesando…' : metodo === 'WOMPI' ? 'Ir a pagar' : 'Confirmar pedido'}
           </button>
           <p className="text-center text-[11px] text-stone-500">Al confirmar aceptas que te contactemos para coordinar la entrega.</p>
         </aside>

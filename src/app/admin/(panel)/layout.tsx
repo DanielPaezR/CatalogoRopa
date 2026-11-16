@@ -3,12 +3,14 @@ import AdminNav from '@/components/admin/AdminNav'
 import { requireAdminPage } from '@/lib/auth'
 import { getConfig } from '@/lib/config'
 import { prisma } from '@/lib/db'
+import { expirarPagosVencidos } from '@/lib/wompi'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Administración', robots: { index: false } }
 
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
   const session = await requireAdminPage()
+  await expirarPagosVencidos()
   const [config, pendientes] = await Promise.all([getConfig(), prisma.pedido.count({ where: { estado: 'PENDIENTE' } })])
 
   return (

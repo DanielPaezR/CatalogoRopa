@@ -52,7 +52,9 @@ function Field({
   )
 }
 
-export default function SettingsForm({ initial, stripe }: { initial: Settings; stripe: boolean }) {
+type WompiInfo = { activo: boolean; pruebas: boolean; eventos: boolean; urlEventos: string }
+
+export default function SettingsForm({ initial, wompi }: { initial: Settings; wompi: WompiInfo }) {
   const router = useRouter()
   const [s, setS] = useState<Settings>(initial)
   const [guardando, setGuardando] = useState(false)
@@ -185,14 +187,33 @@ export default function SettingsForm({ initial, stripe }: { initial: Settings; s
             <Toggle checked={s[k]} onChange={(v) => setS({ ...s, [k]: v })} label={label} />
           </label>
         ))}
-        <div className="flex items-center justify-between gap-4 rounded-xl bg-sand-50 px-4 py-3">
-          <span>
-            <span className="block text-sm font-medium">Tarjeta (Stripe)</span>
-            <span className="block text-xs text-stone-500">
-              {stripe ? 'Activo: configurado con las llaves del servidor.' : 'Inactivo: requiere configurar STRIPE_SECRET_KEY en el servidor.'}
+        <div className="space-y-3 rounded-xl bg-sand-50 px-4 py-4">
+          <div className="flex items-center justify-between gap-4">
+            <span>
+              <span className="block text-sm font-medium">Pago en línea con Wompi</span>
+              <span className="block text-xs text-stone-500">Tarjeta, PSE, Nequi y botón Bancolombia.</span>
             </span>
-          </span>
-          <span className={`chip ${stripe ? 'bg-emerald-100 text-emerald-800' : 'bg-sand-200 text-stone-500'}`}>{stripe ? 'Activo' : 'Inactivo'}</span>
+            <span className={`chip ${wompi.activo ? (wompi.pruebas ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800') : 'bg-sand-200 text-stone-500'}`}>
+              {wompi.activo ? (wompi.pruebas ? 'Modo pruebas' : 'Activo') : 'Inactivo'}
+            </span>
+          </div>
+          {!wompi.activo ? (
+            <p className="text-xs text-stone-500">
+              Para activarlo, configura en el servidor (Railway → Variables) <code>WOMPI_PUBLIC_KEY</code>, <code>WOMPI_INTEGRITY_SECRET</code> y{' '}
+              <code>WOMPI_EVENTS_SECRET</code>. Las encuentras en comercios.wompi.co → Desarrolladores.
+            </p>
+          ) : (
+            <>
+              {wompi.pruebas && <p className="text-xs text-amber-800">Estás usando llaves de pruebas: los pagos no son reales.</p>}
+              <div>
+                <p className="mb-1 text-xs text-stone-500">URL de eventos (pégala en Wompi → Desarrolladores → URL de eventos):</p>
+                <code className="block break-all rounded-lg bg-white px-3 py-2 text-xs">{wompi.urlEventos}</code>
+              </div>
+              {!wompi.eventos && (
+                <p className="text-xs text-red-600">Falta WOMPI_EVENTS_SECRET: sin él no se confirman los pagos que terminan después (por ejemplo, PSE).</p>
+              )}
+            </>
+          )}
         </div>
         {s.pagoTransferencia && (
           <Field label="Datos para transferencia" hint="Banco, tipo y número de cuenta, titular, Nequi/Daviplata…">

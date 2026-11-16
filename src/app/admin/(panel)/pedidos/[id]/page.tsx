@@ -5,7 +5,7 @@ import ProductImage from '@/components/tienda/ProductImage'
 import { MailIcon, MapPinIcon, PhoneIcon, WhatsappIcon } from '@/components/ui/Icons'
 import { prisma } from '@/lib/db'
 import { getConfig } from '@/lib/config'
-import { ESTADO_COLOR, ESTADO_LABEL, METODO_LABEL } from '@/lib/constants'
+import { ESTADO_COLOR, ESTADO_LABEL, METODO_LABEL, PAGO_ESTADO_LABEL } from '@/lib/constants'
 import { cn, formatDate, formatPrice, whatsappLink } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
@@ -89,6 +89,13 @@ export default async function AdminPedidoPage({ params }: { params: { id: string
             <div className="space-y-2 text-sm">
               <h2 className="mb-3 font-sans text-sm font-semibold uppercase tracking-widest text-stone-500">Pago</h2>
               <p>{METODO_LABEL[pedido.metodoPago]}</p>
+              {pedido.metodoPago === 'WOMPI' && (
+                <p className="text-ink-soft">
+                  Wompi: {pedido.pagoEstado ? PAGO_ESTADO_LABEL[pedido.pagoEstado] ?? pedido.pagoEstado : 'Sin intento de pago'}
+                  {pedido.pagoTransaccion && <span className="block text-xs text-stone-400">Transacción {pedido.pagoTransaccion}</span>}
+                  {pedido.pagoReferencia && <span className="block text-xs text-stone-400">Referencia {pedido.pagoReferencia}</span>}
+                </p>
+              )}
               {pedido.notas && (
                 <>
                   <h2 className="mb-1 mt-4 font-sans text-sm font-semibold uppercase tracking-widest text-stone-500">Notas</h2>

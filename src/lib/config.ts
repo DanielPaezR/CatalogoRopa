@@ -8,8 +8,6 @@ export const getConfig = cache(async () => {
   return prisma.configuracion.upsert({ where: { id: 1 }, update: {}, create: { id: 1 } })
 })
 
-export function stripeEnabled() {
-  return Boolean(process.env.STRIPE_SECRET_KEY)
-}
+export { wompiEnabled } from './wompi'
 
 export { calcularEnvio } from './config-shared'

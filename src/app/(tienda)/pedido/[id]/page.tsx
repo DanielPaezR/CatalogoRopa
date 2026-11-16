@@ -7,6 +7,7 @@ import { prisma } from '@/lib/db'
 import { getConfig } from '@/lib/config'
 import { ESTADO_LABEL, METODO_LABEL } from '@/lib/constants'
 import { cn, formatDate, formatPrice, whatsappLink } from '@/lib/utils'
+import { aplicarTransaccion, consultarTransaccion } from '@/lib/wompi'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Tu pedido', robots: { index: false } }
@@ -18,8 +19,17 @@ export default async function PedidoPage({
   searchParams,
 }: {
   params: { id: string }
-  searchParams: { nuevo?: string; pago?: string }
+  searchParams: { nuevo?: string; id?: string; env?: string }
 }) {
+  // Al volver del checkout de Wompi llega ?id=<transacción>: se verifica contra el API de Wompi.
+  if (searchParams.id) {
+    const tx = await consultarTransaccion(searchParams.id)
+    if (tx) {
+      const dueno = await prisma.pedido.findUnique({ where: { id: params.id }, select: { pagoReferencia: true } })
+      if (dueno?.pagoReferencia === tx.reference) await aplicarTransaccion(tx)
+    }
+  }
+
   const [pedido, config] = await Promise.all([
     prisma.pedido.findUnique({ where: { id: params.id }, include: { items: true } }),
     getConfig(),
@@ -34,7 +44,7 @@ export default async function PedidoPage({
   }\nTotal: ${formatPrice(pedido.total)}\nPago: ${METODO_LABEL[pedido.metodoPago]}\nA nombre de ${pedido.clienteNombre}, ${pedido.direccion}, ${pedido.ciudad}.`
   const wa = whatsappLink(config.whatsapp, mensaje)
 
-  const nuevo = searchParams.nuevo === '1' || searchParams.pago === 'ok'
+  const nuevo = searchParams.nuevo === '1' || Boolean(searchParams.id)
   const pasoActual = PASOS.indexOf(pedido.estado)
   const cancelado = pedido.estado === 'CANCELADO'
 
@@ -42,11 +52,6 @@ export default async function PedidoPage({
 
   return (
     <div className="wrap max-w-5xl pb-10 pt-12 lg:pt-20">
-      {searchParams.pago === 'cancelado' && !pedido.pagado && (
-        <div className="mb-10 border border-black/15 p-5 text-[14px]">
-          El pago con tarjeta no se completó. Escríbenos por WhatsApp y te ayudamos a terminar tu compra.
-        </div>
-      )}
 
       <header className="text-center">
         <p className="eyebrow mb-4 text-stone-500">Pedido #{pedido.numero}</p>
@@ -60,7 +65,37 @@ export default async function PedidoPage({
         </p>
       </header>
 
-      {wa && !cancelado && pedido.metodoPago !== 'STRIPE' && (
+      {pedido.metodoPago === 'WOMPI' && !cancelado && (
+        <div className="mx-auto mt-12 max-w-xl bg-bone px-6 py-8 text-center">
+          {pedido.pagado ? (
+            <>
+              <p className="text-[12px] uppercase tracking-label">Pago aprobado</p>
+              <p className="mt-2 font-display text-3xl font-light">Recibimos tu pago de {formatPrice(pedido.total)}</p>
+              <p className="mt-2 text-[13px] text-stone-500">Ya estamos preparando tu pedido. Te avisaremos cuando salga.</p>
+            </>
+          ) : pedido.pagoEstado === 'PENDING' && pedido.pagoTransaccion ? (
+            <>
+              <p className="text-[12px] uppercase tracking-label">Pago en proceso</p>
+              <p className="mt-2 font-display text-3xl font-light">Estamos confirmando tu pago</p>
+              <p className="mt-2 text-[13px] text-stone-500">Puede tardar unos minutos (por ejemplo, con PSE).</p>
+              <Link href={`/pedido/${pedido.id}`} className="cta-outline mt-6">Actualizar estado</Link>
+            </>
+          ) : (
+            <>
+              <p className="text-[12px] uppercase tracking-label">
+                {pedido.pagoEstado && pedido.pagoEstado !== 'PENDING' ? 'El pago no se completó' : 'Pago pendiente'}
+              </p>
+              <p className="mt-2 font-display text-3xl font-light">
+                {pedido.pagoEstado && pedido.pagoEstado !== 'PENDING' ? 'Intenta de nuevo' : 'Completa tu pago'}
+              </p>
+              <p className="mt-2 text-[13px] text-stone-500">Reservamos tus prendas por 2 horas. Puedes pagar con tarjeta, PSE o Nequi.</p>
+              <a href={`/api/pedidos/${pedido.id}/pagar`} className="cta mt-6">Pagar {formatPrice(pedido.total)}</a>
+            </>
+          )}
+        </div>
+      )}
+
+      {wa && !cancelado && pedido.metodoPago !== 'WOMPI' && (
         <div className="mx-auto mt-12 max-w-xl bg-bone px-6 py-8 text-center">
           <p className="text-[12px] uppercase tracking-label">
             {pedido.metodoPago === 'WHATSAPP' ? 'Último paso' : 'Agiliza tu envío'}
@@ -140,6 +175,7 @@ export default async function PedidoPage({
             <p className={label}>Pago</p>
             <p>{METODO_LABEL[pedido.metodoPago]}</p>
             {pedido.pagado && <p className="text-stone-500">Pago recibido</p>}
+            {pedido.pagoTransaccion && <p className="text-[12px] text-stone-400">Transacción {pedido.pagoTransaccion}</p>}
           </div>
           {pedido.notas && (
             <div>

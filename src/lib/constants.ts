@@ -17,16 +17,24 @@ export const ESTADO_COLOR: Record<string, string> = {
   CANCELADO: 'bg-stone-200 text-stone-600',
 }
 
-export const METODOS_PAGO = ['WHATSAPP', 'CONTRAENTREGA', 'TRANSFERENCIA', 'STRIPE'] as const
+export const METODOS_PAGO = ['WHATSAPP', 'CONTRAENTREGA', 'TRANSFERENCIA', 'WOMPI'] as const
 export type MetodoPago = (typeof METODOS_PAGO)[number]
 
 export const METODO_LABEL: Record<string, string> = {
   WHATSAPP: 'Acordar por WhatsApp',
   CONTRAENTREGA: 'Pago contra entrega',
   TRANSFERENCIA: 'Transferencia bancaria / Nequi',
-  STRIPE: 'Tarjeta (en línea)',
+  WOMPI: 'Pago en línea (tarjeta, PSE, Nequi)',
 }
 
 export const TALLAS_SUGERIDAS = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Única', '6', '8', '10', '12', '28', '30', '32', '34', '36', '38']
 
 export const STOCK_BAJO = 3
+
+export const PAGO_ESTADO_LABEL: Record<string, string> = {
+  PENDING: 'En proceso',
+  APPROVED: 'Aprobado',
+  DECLINED: 'Rechazado',
+  VOIDED: 'Anulado',
+  ERROR: 'Error',
+}

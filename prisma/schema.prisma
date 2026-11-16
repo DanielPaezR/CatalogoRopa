@@ -88,10 +88,13 @@ model Pedido {
   total           Int
   // PENDIENTE, CONFIRMADO, ENVIADO, ENTREGADO, CANCELADO
   estado          String       @default("PENDIENTE")
-  // WHATSAPP, CONTRAENTREGA, TRANSFERENCIA, STRIPE
+  // WHATSAPP, CONTRAENTREGA, TRANSFERENCIA, WOMPI
   metodoPago      String       @default("WHATSAPP")
   pagado          Boolean      @default(false)
-  stripeSessionId String?      @unique
+  // Pago en línea (Wompi)
+  pagoReferencia  String?      @unique
+  pagoTransaccion String?
+  pagoEstado      String?
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
   items           PedidoItem[]
