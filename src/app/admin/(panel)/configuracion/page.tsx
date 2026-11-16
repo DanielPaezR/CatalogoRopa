@@ -1,6 +1,7 @@
 import PageHeader from '@/components/admin/PageHeader'
 import PasswordForm from '@/components/admin/PasswordForm'
 import SettingsForm from '@/components/admin/SettingsForm'
+import DemoCleaner from '@/components/admin/DemoCleaner'
 import { requireAdminPage } from '@/lib/auth'
 import { getConfig, stripeEnabled } from '@/lib/config'
 import { prisma } from '@/lib/db'
@@ -9,13 +10,17 @@ export const dynamic = 'force-dynamic'
 
 export default async function ConfiguracionPage() {
   const session = await requireAdminPage()
-  const { id: _id, updatedAt: _u, ...config } = await getConfig()
-  const suscriptores = await prisma.suscriptor.count()
+  const { id: _id, updatedAt: _u, demoCargado: _d, ...config } = await getConfig()
+  const [suscriptores, demo] = await Promise.all([
+    prisma.suscriptor.count(),
+    prisma.producto.count({ where: { sku: { startsWith: 'DEMO-' } } }),
+  ])
 
   return (
     <>
       <PageHeader title="Configuración" description="Datos de la tienda, envíos, pagos y acceso." />
       <div className="space-y-6">
+        <DemoCleaner cantidad={demo} />
         <SettingsForm initial={config} stripe={stripeEnabled()} />
         <section className="card flex flex-wrap items-center justify-between gap-4 p-6">
           <div>

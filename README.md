@@ -31,6 +31,10 @@ El inventario se descuenta al crear el pedido (de forma atómica, sin sobreventa
    - `STRIPE_SECRET_KEY` y `STRIPE_WEBHOOK_SECRET` → opcional, habilita pago con tarjeta. Webhook: `https://TU-DOMINIO/api/stripe/webhook` con eventos `checkout.session.completed`, `checkout.session.expired`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`.
 3. Al arrancar, `scripts/start.sh` sincroniza el esquema (`prisma db push`), crea admin/configuración/categorías base si faltan y lanza el servidor. Healthcheck: `/api/health`.
 
+### Catálogo de muestra
+
+En el primer arranque, si la tienda no tiene productos, se cargan 13 productos de ejemplo (referencia `DEMO-…`, imágenes en `public/demo/`) junto con una portada y una imagen editorial, para ver la tienda completa desde el primer día. Se borran con un clic en **Panel → Configuración → Productos de muestra** y no vuelven a cargarse. Para desactivarlo por completo, define `SEED_DEMO=0`.
+
 > **Importante:** tras el primer despliegue entra a `/admin/configuracion` y cambia la contraseña del administrador y el número de WhatsApp.
 
 ## Desarrollo local

@@ -142,6 +142,7 @@ model Configuracion {
   pagoWhatsapp      Boolean  @default(true)
   pagoContraentrega Boolean  @default(true)
   pagoTransferencia Boolean  @default(true)
+  demoCargado       Boolean  @default(false)
   updatedAt         DateTime @updatedAt
 }
 

@@ -104,15 +104,15 @@ export default function CatalogShell({ productos, total, page, pages, ordenes, t
     <>
       <div className="sticky top-[100px] z-20 -mx-4 border-y border-black/10 bg-white/95 px-4 backdrop-blur sm:-mx-6 sm:px-6 lg:top-[108px] lg:-mx-10 lg:px-10">
         <div className="flex h-12 items-center gap-4">
-          <button onClick={() => setOpen(true)} className="flex items-center gap-2 text-[12px] uppercase tracking-label hover:opacity-60">
+          <button onClick={() => setOpen(true)} className="flex items-center gap-2 whitespace-nowrap text-[12px] uppercase tracking-label hover:opacity-60">
             <SlidersIcon width={18} height={18} />
             Filtrar y ordenar
             {chips.length > 0 && <span className="tabular-nums">({chips.length})</span>}
           </button>
-          <p className="ml-auto text-[12px] uppercase tracking-label text-stone-500">
+          <p className="ml-auto whitespace-nowrap text-[11px] uppercase tracking-label text-stone-500 sm:text-[12px]">
             {total} {total === 1 ? 'artículo' : 'artículos'}
           </p>
-          <div className="flex items-center gap-1 border-l border-black/10 pl-3">
+          <div className="hidden items-center gap-1 border-l border-black/10 pl-3 sm:flex">
             <button
               onClick={() => toggleDense(false)}
               className={cn('icon-btn h-8 w-8', !dense ? 'opacity-100' : 'opacity-30')}
@@ -161,7 +161,7 @@ export default function CatalogShell({ productos, total, page, pages, ordenes, t
           <div
             className={cn(
               'grid gap-x-2 gap-y-10 sm:gap-x-3',
-              dense ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' : 'grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-3'
+              dense ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' : 'grid-cols-2 lg:grid-cols-3'
             )}
           >
             {productos.map((p, i) => (

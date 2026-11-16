@@ -2,6 +2,7 @@
 // Es idempotente: se ejecuta en cada arranque y solo crea lo que falte.
 const { PrismaClient } = require('@prisma/client')
 const bcrypt = require('bcryptjs')
+const { cargarDemo } = require('./demo')
 
 const prisma = new PrismaClient()
 
@@ -36,6 +37,8 @@ async function main() {
     await prisma.categoria.createMany({ data: base })
     console.log('[seed] Categorías base creadas')
   }
+
+  if (process.env.SEED_DEMO !== '0') await cargarDemo(prisma)
 }
 
 main()

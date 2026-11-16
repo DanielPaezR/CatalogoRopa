@@ -77,8 +77,16 @@ export default async function DashboardPage() {
     { label: 'Stock bajo', value: String(bajoStock.length), hint: `${STOCK_BAJO} unidades o menos`, href: '/admin/productos?stock=bajo' },
   ]
 
+  const demo = await prisma.producto.count({ where: { sku: { startsWith: 'DEMO-' } } })
+
   return (
     <>
+      {demo > 0 && (
+        <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
+          La tienda muestra {demo} productos de ejemplo para que veas cómo luce.{' '}
+          <Link href="/admin/configuracion" className="font-medium underline">Elimínalos aquí</Link> cuando subas tu catálogo.
+        </div>
+      )}
       <PageHeader
         title="Resumen"
         description="Así va tu tienda."

@@ -65,8 +65,7 @@ export default function ProductGallery({ imagenes, nombre }: { imagenes: string[
             key={src + i}
             onClick={() => setZoom(i)}
             className={cn(
-              'group relative aspect-[2/3] cursor-zoom-in overflow-hidden bg-bone',
-              imagenes.length > 2 && imagenes.length % 2 === 1 && i === 0 && 'col-span-2 aspect-[4/3]'
+              'group relative aspect-[2/3] cursor-zoom-in overflow-hidden bg-bone'
             )}
             aria-label={`Ampliar imagen ${i + 1}`}
           >

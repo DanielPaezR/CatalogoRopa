@@ -87,7 +87,11 @@ export default function Footer({
       </div>
 
       <div className="wrap overflow-hidden">
-        <p className="select-none whitespace-nowrap text-center text-[17vw] font-medium uppercase leading-[0.8] tracking-[0.08em] text-white/[0.06]">
+        <p
+          className="select-none whitespace-nowrap text-center font-medium uppercase leading-[0.8] tracking-[0.08em] text-white/[0.06]"
+          style={{ fontSize: `min(17vw, ${(105 / Math.max(config.nombreTienda.length, 1)).toFixed(1)}vw)` }}
+          aria-hidden="true"
+        >
           {config.nombreTienda}
         </p>
       </div>
