@@ -18,8 +18,22 @@ for VAR in PRISMA_QUERY_ENGINE_LIBRARY PRISMA_QUERY_ENGINE_BINARY PRISMA_SCHEMA_
   fi
 done
 
+# Muestra a qué base de datos se conecta (sin usuario ni contraseña)
+DB_DESTINO=$(echo "$DATABASE_URL" | sed -E 's#^[a-z]+://[^@]*@##; s#[/?].*$##')
+echo "→ Base de datos: $DB_DESTINO"
+
 echo "→ Sincronizando esquema de base de datos…"
-node node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+INTENTO=1
+until node node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss; do
+  if [ "$INTENTO" -ge 10 ]; then
+    echo "ERROR: no se pudo conectar a la base de datos ($DB_DESTINO) tras $INTENTO intentos." >&2
+    echo "Revisa en Railway que el servicio Postgres esté activo y que DATABASE_URL sea \${{Postgres.DATABASE_URL}}." >&2
+    exit 1
+  fi
+  echo "   La base de datos aún no responde (intento $INTENTO/10). Reintentando en 5 s…"
+  INTENTO=$((INTENTO + 1))
+  sleep 5
+done
 
 echo "→ Datos iniciales…"
 node prisma/seed.js
